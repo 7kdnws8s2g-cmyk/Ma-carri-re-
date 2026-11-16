@@ -1018,6 +1018,147 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 [data-ambiance="clair"] .annonce-tag { color: #b77300; }
 [data-ambiance="clair"] .splash { background: var(--bg); }
 [data-ambiance="clair"] body::before { background: var(--bg); }
+
+.fusion-ligne { display: flex; flex-direction: column; gap: 8px; }
+/* ---------- Import par capture ---------- */
+.rangee-btn { display: flex; gap: 8px; align-items: center; flex: none; }
+.capt-gros { width: 100%; min-height: 48px; font-size: .95rem; margin-top: 10px; }
+.capt-apercus { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.capt-apercus img { height: 150px; border-radius: 14px; border: 1px solid var(--edge-low); object-fit: cover; flex: none; }
+.capt-attente { display: flex; align-items: center; gap: 12px; margin: 14px 0; }
+.capt-rond { width: 22px; height: 22px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--fg) 20%, transparent); border-top-color: var(--plus); animation: captTourne .9s linear infinite; flex: none; }
+@keyframes captTourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .capt-rond { animation-duration: 3s; } }
+.capt-carte { padding: 14px; margin: 10px 0; transition: opacity .2s; }
+.capt-carte.capt-off { opacity: .55; }
+.capt-tete { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.capt-tete input { width: 22px; height: 22px; flex: none; accent-color: var(--plus); }
+.capt-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 8px; }
+.capt-champ { display: flex; flex-direction: column; gap: 4px; font-size: .75rem; color: var(--muted); min-width: 0; }
+.capt-champ input, .capt-champ select { min-height: 44px; box-sizing: border-box; width: 100%; min-width: 0; }
+.capt-alerte { color: var(--gold); }
+
+/* =====================================================================
+   PLATEFORME : navigation 6 onglets, centre des matchs, compétitions,
+   graphiques, profil, badges, équipe
+   ===================================================================== */
+:root { --c1: #3d8fe0; --c2: #c47a12; }
+[data-ambiance="clair"] { --c1: #1f6fd1; --c2: #b86e00; }
+.onglets { grid-template-columns: repeat(var(--nb, 5), minmax(0, 1fr)) !important; }
+.onglets[data-role="PLAYER"] button { font-size: .7rem !important; padding-inline: 0 !important; letter-spacing: -.01em; }
+.onglets[data-role="PLAYER"] .ico, .onglets[data-role="PLAYER"] .ico-svg { width: 1.4rem; height: 1.4rem; font-size: 1.35rem; }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.trio .btn-total { font-size: .95rem !important; padding: 15px 4px !important; }
+.ecusson { --h: 210; flex: none; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font: 800 .72rem var(--ui); color: #fff; letter-spacing: .02em;
+  background: linear-gradient(160deg, hsl(var(--h) 62% 50%), hsl(var(--h) 62% 34%)); box-shadow: inset 0 1px 0 rgb(255 255 255 / .45), 0 0 0 1.5px rgb(255 255 255 / .35); }
+.ecusson.grand { width: 52px; height: 52px; font-size: 1.05rem; }
+.affiche { appearance: none; width: 100%; text-align: center; color: var(--fg); font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 14px; }
+.affiche-titre { font-size: .72rem; font-weight: 800; letter-spacing: .1em; color: var(--muted); }
+.affiche-comp { font-size: .8rem; color: var(--muted); }
+.affiche-eq { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; width: 100%; }
+.affiche-equipe { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.affiche-equipe b { font-size: .92rem; line-height: 1.15; overflow-wrap: anywhere; }
+.affiche-score { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.affiche-score b { font: 800 1.9rem var(--num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.point-direct { color: var(--danger); font: 800 .78rem var(--ui); animation: clignote 1.6s ease-in-out infinite; }
+@keyframes clignote { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .point-direct { animation: none; } }
+.affiche-infos { font-size: .82rem; color: var(--muted); }
+.puce.compte { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.vide-affiche { gap: 6px; }
+.bandeau-direct { appearance: none; width: 100%; color: var(--fg); font: inherit; text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; cursor: pointer; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--danger) 60%, transparent) !important; }
+.direct-panneau { gap: 10px; }
+.direct-score { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+.direct-score > div { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; border-radius: 18px; background: var(--glass); min-width: 0; }
+.direct-score b { overflow-wrap: anywhere; font-size: .9rem; }
+.gros-chiffre { font: 800 3rem var(--num); line-height: 1; font-variant-numeric: tabular-nums; }
+.direct-score .mini { min-width: 48px; min-height: 44px; justify-content: center; font-size: 1.05rem; }
+.filtres.segm .chip { min-height: 40px; }
+.cal-barre { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.cal-barre .capsule { min-width: 150px; }
+.cal-mois { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.cal-nom { text-align: center; font-size: .68rem; font-weight: 800; color: var(--muted); padding-bottom: 4px; }
+.cal-case { appearance: none; border: 0; background: none; color: var(--fg); font: 700 .86rem var(--num); min-height: 44px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; padding: 2px 0; }
+.cal-case.hors { opacity: .38; }
+.cal-case.auj { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cal-case.choisi { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.cal-points { display: flex; gap: 2px; }
+.cal-points i, .cal-legende i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; background: var(--muted); }
+.cal-points i.v, .cal-legende i.v { background: var(--win); } .cal-points i.n, .cal-legende i.n { background: var(--draw); } .cal-points i.d, .cal-legende i.d { background: var(--loss); }
+.cal-points i.avenir, .cal-legende i.avenir { background: var(--accent); } .cal-points i.direct { background: var(--danger); }
+.cal-legende { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; font-size: .74rem; color: var(--muted); margin-top: 8px; }
+.cal-legende span { display: inline-flex; align-items: center; gap: 5px; }
+.cal-ligne { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: start; padding: 8px 0; border-top: 1px solid var(--edge-low); }
+.cal-ligne:first-child { border-top: 0; }
+.cal-ligne.auj .calm-date { color: var(--accent); }
+.calm-date { font-weight: 800; font-size: .85rem; padding-top: 4px; }
+.chrono { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.chrono li { display: grid; grid-template-columns: 40px 1fr; gap: 8px; align-items: baseline; padding: 6px 10px; border-radius: 12px; background: var(--glass); }
+.chrono li.moi { box-shadow: inset 3px 0 0 var(--accent); }
+.chrono-min { font: 800 .9rem var(--num); color: var(--muted); }
+.compo-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .9rem; }
+.compo-liste li.moi { font-weight: 800; color: var(--accent); }
+.ma-place { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 18px; background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.ma-place > div { display: flex; flex-direction: column; }
+.ma-place b { font-size: 1.15rem; }
+.tableau td.eq { display: flex; align-items: center; gap: 6px; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tableau td.eq .ecusson { width: 22px; height: 22px; font-size: .58rem; }
+.tableau td.evo { width: 14px; padding-inline: 0; font-size: .7rem; }
+.evo.monte { color: var(--win); } .evo.baisse { color: var(--loss); }
+.top-liste { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+.top-liste li { padding: 4px 0; }
+.top-liste li > * { vertical-align: middle; }
+.top-liste li { display: list-item; }
+.top-liste li span { display: inline-block; min-width: 60%; }
+.top-liste li.moi { color: var(--accent); font-weight: 800; }
+.parcours { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.parcours button { appearance: none; width: 100%; border: 0; color: var(--fg); font: inherit; display: grid; grid-template-columns: 92px auto 1fr auto; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 14px; background: var(--glass); cursor: pointer; text-align: left; min-height: 44px; }
+.parcours .parcours-tour { font-size: .74rem; font-weight: 800; color: var(--muted); }
+.parcours .parcours-adv { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.parcours li.v button { box-shadow: inset 3px 0 0 var(--win); } .parcours li.d button { box-shadow: inset 3px 0 0 var(--loss); } .parcours li.n button { box-shadow: inset 3px 0 0 var(--draw); }
+.etoile { appearance: none; border: 0; background: none; color: var(--muted); font-size: 1.35rem; min-width: 44px; min-height: 44px; cursor: pointer; flex: none; }
+.etoile.on { color: var(--gold); }
+.item .item-corps { appearance: none; border: 0; background: none; color: inherit; font: inherit; text-align: left; display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0; padding: 0; cursor: pointer; }
+.fiche-pro { align-items: center; text-align: center; gap: 8px; }
+.fiche-haut { position: relative; }
+.fiche-numero { position: absolute; right: -10px; bottom: -4px; min-width: 38px; height: 38px; padding: 0 6px; border-radius: 19px; display: flex; align-items: center; justify-content: center; font: 900 1.15rem var(--num); color: #fff; background: var(--accent); box-shadow: 0 0 0 3px var(--bg); }
+.fiche-nom { font-size: 1.6rem; font-weight: 900; letter-spacing: -.02em; }
+.badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.badge-c { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; padding: 10px 6px; border-radius: 18px; background: var(--glass); opacity: .62; min-width: 0; }
+.badge-c.ok { opacity: 1; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--gold) 70%, transparent); }
+.badge-c b { font-size: .74rem; line-height: 1.15; }
+.badge-ico { font-size: 1.6rem; line-height: 1; }
+.badge-c .jauge { width: 100%; height: 5px; }
+.badge-c .jauge span { background: var(--accent); }
+.graph { display: flex; flex-direction: column; gap: 8px; }
+.graph-zone { position: relative; }
+.g-svg { width: 100%; height: auto; display: block; touch-action: pan-y; overflow: visible; }
+.g-grille { stroke: var(--edge-low); stroke-width: 1; }
+.g-base { stroke: var(--muted); stroke-width: 1; opacity: .6; }
+.g-axe { fill: var(--muted); font: 600 9.5px var(--ui); }
+.g-etiquette { fill: var(--fg); font: 800 11px var(--num); }
+.g-barre { transition: opacity .15s; }
+.g-svg:hover .g-barre:not(.g-actif), .g-svg:has(.g-actif) .g-barre:not(.g-actif) { opacity: .55; }
+.g-point { opacity: 0; } .g-point.dernier, .g-point.g-actif { opacity: 1; }
+.g-point.g-actif { r: 5; stroke: var(--bg); stroke-width: 2; }
+.graph-bulle[hidden], .graph .tableau[hidden], .graph-zone[hidden] { display: none !important; }
+.graph-bulle { position: absolute; top: -6px; z-index: 3; pointer-events: none; padding: 8px 10px; border-radius: 12px; background: rgb(8 20 52 / .94); color: #fff; font-size: .8rem; display: flex; flex-direction: column; gap: 2px; white-space: nowrap; box-shadow: 0 6px 18px rgb(0 0 0 / .3); }
+[data-ambiance="clair"] .graph-bulle { background: rgb(255 255 255 / .97); color: #0b1d45; }
+.graph-bulle i, .graph-legende i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.graph-legende { display: flex; gap: 14px; font-size: .8rem; color: var(--fg); }
+.ligne-classement { appearance: none; width: 100%; color: var(--fg); font: inherit; display: flex; align-items: center; gap: 12px; padding: 12px 40px 12px 14px; text-align: left; cursor: pointer; }
+.ligne-classement .i-txt { display: flex; flex-direction: column; gap: 2px; }
+.ligne-classement .chev { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: var(--muted); }
+.presences { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.presences .chip { min-height: 40px; }
+.conv { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 16px; background: var(--glass); }
+.effectif { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.effectif li { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 14px; background: var(--glass); }
+.effectif li.moi { box-shadow: inset 3px 0 0 var(--accent); }
+.effectif .i-txt { display: flex; flex-direction: column; }
+.eff-num { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 900 .95rem var(--num); background: color-mix(in srgb, var(--accent) 35%, transparent); flex: none; }
+.pastille { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+@media (max-width: 370px) { .badges { grid-template-columns: repeat(2, minmax(0, 1fr)); } .parcours button { grid-template-columns: 74px auto 1fr auto; } .onglets[data-role="PLAYER"] button { font-size: .62rem !important; } }
 </style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
@@ -1135,7 +1276,9 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
   <section class="vue" id="v-stats" aria-label="Statistiques" hidden></section>
 
   <!-- ============ PLUS ============ -->
-  <section class="vue" id="v-plus" aria-label="Plus" hidden></section>
+  <section class="vue" id="v-plus" aria-label="Mon profil" hidden></section>
+  <section class="vue" id="v-competitions" aria-label="Compétitions" hidden></section>
+  <section class="vue" id="v-equipe-j" aria-label="Mon équipe" hidden></section>
 
   <!-- ============ SECTIONS DU MENU ============ -->
   <section class="vue" id="v-section" hidden></section>
@@ -2709,6 +2852,7 @@ const adversairesConnus = () => {
 const coequipiers = () => [...new Set([...ETAT.buts.map(b => b.passeur), ...ETAT.passes.map(p => p.buteur)].filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr"));
 const TOURS = ["Journée 1", "Journée 2", "Journée 3", "Phase de poules", "1er tour", "2e tour", "3e tour", "16e de finale", "8e de finale", "Quart de finale", "Demi-finale", "Finale", "Match aller", "Match retour"];
 
+const TERRAINS = [["", "—"], ["herbe", "Herbe"], ["synthe", "Synthétique"], ["stabilise", "Stabilisé"], ["salle", "Salle / futsal"]];
 // ---------- Match ----------
 function editerMatch(m0, apresCreation) {
   const nouveau = !m0;
@@ -2720,8 +2864,13 @@ function editerMatch(m0, apresCreation) {
         { k: "comp", l: "Compétition", t: "select", o: COMPS },
         { k: "compNom", l: "Nom précis (facultatif)", ph: "Ex. Coupe de l'Isère, U15 D2…" },
         [{ k: "club", l: "Mon équipe", t: "liste", o: clubsConnus(), ph: "Mon club" }, { k: "adv", l: "Adversaire", t: "liste", o: adversairesConnus(), ph: "Adversaire" }],
-        { k: "lieu", l: "Lieu", t: "select", o: LIEUX },
+        [{ k: "lieu", l: "Domicile / extérieur", t: "select", o: LIEUX }, { k: "heure", l: "Heure du coup d'envoi", t: "time" }],
         { k: "sel", l: "🌍 Match avec l'équipe nationale", t: "check" }
+      ] },
+      { titre: "📍 Stade et adresse (facultatif)", replie: !(m.stade || m.adresse || m.ville), champs: [
+        [{ k: "stade", l: "Stade", ph: "Ex. Stade municipal" }, { k: "ville", l: "Ville", ph: "Ex. Voiron" }],
+        { k: "adresse", l: "Adresse", ph: "Rue, code postal…" },
+        { k: "terrain", l: "Terrain", t: "select", o: TERRAINS }
       ] },
       { titre: "Score", champs: [
         [{ k: "bp", l: "Buts de mon équipe", t: "number", min: 0, max: 99 }, { k: "bc", l: "Buts adverses", t: "number", min: 0, max: 99 }],
@@ -2737,6 +2886,21 @@ function editerMatch(m0, apresCreation) {
         [{ k: "cfTires", l: "Coups francs tirés", t: "number", min: 0, max: 20 }, { k: "cfCadres", l: "Coups francs cadrés", t: "number", min: 0, max: 20 }],
         { k: "hdm", l: "🏅 Homme du match", t: "check" },
         el("p", { class: "aide", text: "Tes buts, passes et penaltys s'ajoutent un par un dans la fiche du match : ils sont comptés automatiquement." })
+      ] },
+      { titre: "📋 Feuille de match de l'équipe (facultatif)", replie: !(m.titulaires || m.buteurs || m.remplacements), champs: [
+        el("p", { class: "aide", text: "Une ligne par joueur ou par événement. Écris seulement ce qui s'est vraiment passé." }),
+        { k: "titulaires", l: "Titulaires", t: "textarea", rows: 4, ph: "Un nom par ligne" },
+        { k: "remplacants", l: "Remplaçants", t: "textarea", rows: 3, ph: "Un nom par ligne" },
+        { k: "buteurs", l: "Buteurs de mon équipe", t: "textarea", rows: 3, ph: "12' Lucas (passe Adam)\n55' Chahid" },
+        { k: "remplacements", l: "Remplacements", t: "textarea", rows: 2, ph: "60' Noah ↔ Yanis" },
+        { k: "cartons", l: "Cartons", t: "textarea", rows: 2, ph: "70' 🟨 Lucas" },
+        { k: "mdm", l: "Meilleur joueur du match", ph: "Nom" },
+        { k: "resume", l: "Résumé du match", t: "textarea", rows: 3 }
+      ] },
+      { titre: "📊 Statistiques de l'équipe (facultatif)", replie: !(m.possession != null || m.tirsEq != null), champs: [
+        [{ k: "possession", l: "Possession (%)", t: "number", min: 0, max: 100 }, { k: "corners", l: "Corners", t: "number", min: 0, max: 40 }],
+        [{ k: "tirsEq", l: "Tirs de l'équipe", t: "number", min: 0, max: 80 }, { k: "tirsCadresEq", l: "Tirs cadrés", t: "number", min: 0, max: 80 }],
+        [{ k: "tirsAdv", l: "Tirs adverses", t: "number", min: 0, max: 80 }, { k: "fautes", l: "Fautes", t: "number", min: 0, max: 60 }]
       ] },
       { titre: "Statistiques avancées (facultatif)", replie: true, champs: [
         [{ k: "xg", l: "Buts attendus (xG)", t: "number", min: 0, step: 0.01 }, { k: "xa", l: "Passes attendues (xA)", t: "number", min: 0, step: 0.01 }],
@@ -2756,6 +2920,7 @@ function editerMatch(m0, apresCreation) {
       onSave: o => {
         if (!o.d) { toast("Mets une date au match.", 4000); return; }
         if (COMPS_SELECTION.has(o.comp)) o.sel = true;
+        if (o.club) o.club = clubOfficiel(o.club.trim());
         enregistrer("matchs", o, `Match ${matchLabel(o)}`);
         fermerHaut();
         if (nouveau) { ficheMatch(o.id); if (apresCreation) apresCreation(o); }
@@ -2792,7 +2957,7 @@ function ficheMatch(id) {
     const tabs = ETAT.tab.filter(t => t.matchId === m.id).sort((a, b) => n0(a.ordre) - n0(b.ordre));
     const nb = buts.filter(b => !b.csc).length;
     corps.append(el("div", { class: "carte lg", style: "text-align:center;align-items:center" },
-      el("span", { class: "petit muted cap", text: `${joli(m.d)}` }),
+      el("span", { class: "petit muted cap", text: `${joli(m.d)}${m.heure ? " · " + m.heure : ""}` }),
       el("span", { class: "petit muted", text: [compLabel(m), m.tour, LIEUX.find(l => l[0] === m.lieu)?.[1], estSelection(m) ? "🌍 Sélection" : null].filter(Boolean).join(" · ") }),
       el("div", { style: "display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap" },
         el("b", { style: "font-size:1.1rem", text: m.club || "Mon équipe" }),
@@ -2811,6 +2976,7 @@ function ficheMatch(id) {
         n0(m.cr) ? el("span", { class: "puce d", text: `🟥 ${m.cr}` }) : null),
       el("button", { class: "mini gris", type: "button", onclick: () => editerMatch(m) }, "✏️ Modifier le match")));
 
+    if (typeof ficheMatchHaut === "function") ficheMatchHaut(corps, m);
     // Buts
     const bl = el("ul", { class: "liste" }); buts.forEach(b => bl.append(ligneBut(b)));
     corps.append(el("div", { class: "carte lg" },
@@ -2835,6 +3001,7 @@ function ficheMatch(id) {
       el("div", { class: "rangee" },
         el("button", { class: "mini gris", type: "button", onclick: () => editerPenRate(null, m.id) }, "+ Penalty raté"),
         el("button", { class: "mini gris", type: "button", onclick: () => editerTab(null, m.id) }, "+ Tir au but (séance)"))));
+    if (typeof ficheMatchBas === "function") ficheMatchBas(corps, m);
     // Médias
     corps.append(el("div", { class: "carte lg" }, el("h3", { text: "📹 Vidéos, photos et liens du match" }),
       zoneMedias(m, () => { sauver(); toutRafraichir(); }, { titre: `${m.club || "Match"} – ${m.adv || ""}` })));
@@ -3084,12 +3251,12 @@ function editerSaison(k) {
 //  Écrans principaux : Accueil, Compteur, Matchs, Stats, Plus
 // =====================================================================
 let vueCourante = "accueil", sectionCourante = null, saisonVue = null, SegCapsule = null;
-const ORDRE_VUES = { bienvenue: 0, accueil: 0, compteur: 1, matchs: 2, stats: 3, plus: 4, section: 5, coupes: 5, ligue: 5,
-  entrainement: 5, travail: 5, calendrier: 5, messages: 5, bibliotheque: 5, "c-accueil": 0, "c-equipe": 1, "c-seances": 2, "c-cahier": 3, "c-messages": 4 };
+const ORDRE_VUES = { bienvenue: 0, accueil: 0, compteur: 0.5, matchs: 1, stats: 2, competitions: 3, "equipe-j": 4, plus: 5, section: 6, coupes: 6, ligue: 6,
+  entrainement: 6, travail: 6, calendrier: 6, messages: 6, bibliotheque: 6, "c-accueil": 0, "c-equipe": 1, "c-seances": 2, "c-cahier": 3, "c-messages": 4 };
 // Vues ouvertes depuis un onglet (la capsule reste sur l'onglet d'où l'on vient)
 const VUES_LIBRES = new Set(["entrainement", "travail", "calendrier", "messages", "bibliotheque"]);
 let ongletOrigine = "accueil";
-const ongletDe = nom => (["section", "coupes", "ligue"].includes(nom) ? "plus" : VUES_LIBRES.has(nom) ? ongletOrigine : nom);
+const ongletDe = nom => (["section", "coupes", "ligue"].includes(nom) ? "plus" : nom === "compteur" ? "accueil" : VUES_LIBRES.has(nom) ? ongletOrigine : nom);
 // Écrans ajoutés (onboarding, entraînement, coach…) : nom → fonction de rendu
 const VUES_EXTRA = {};
 let vueAffichee = "accueil", idTransition = 0;
@@ -3227,9 +3394,11 @@ function rendreAccueil() {
         (p.pied || p.saisonProfil) ? el("span", { class: "muted petit", text: [p.pied ? `Pied fort : ${{ droit: "droit", gauche: "gauche", deux: "les deux" }[p.pied] || p.pied}` : null, `Saison ${fmtSaison(sa)}`].filter(Boolean).join(" · ") }) : null,
         el("div", { class: "rangee" }, bouton(nom ? "Ma fiche" : "Créer ma fiche", editerProfil, "capsule lg"), bouton("Ma carrière", () => ouvrirSection("carriere"), "capsule lg"))))));
   blocsAccueilJoueur(v);
-  v.append(el("div", { class: "duo" },
+  blocsAccueilMatchs(v);
+  v.append(el("div", { class: "trio" },
+    el("button", { class: "btn btn-total lg", type: "button", onclick: () => allerVue("compteur") }, "⚽ Compteur"),
     el("button", { class: "btn btn-total lg", type: "button", onclick: () => editerMatch(null) }, "＋ Match"),
-    el("button", { class: "btn btn-total lg", type: "button", onclick: () => editerBut(null) }, "＋ But détaillé")));
+    el("button", { class: "btn btn-total lg", type: "button", onclick: () => editerBut(null) }, "＋ But")));
 
   const tuile = (lab, val, sous, onclick, cls) => {
     const [ico, ...mots] = lab.split(" ");
@@ -3254,8 +3423,8 @@ function rendreAccueil() {
     se.score != null ? el("div", { class: "jauge" }, el("span", { style: `width:${Math.round(se.score * 10)}%` })) : null,
     el("span", { class: "t-sous", text: `${se.buts5} but${se.buts5 > 1 ? "s" : ""} sur les 5 derniers matchs · ${se.buts10} sur les 10 derniers` }));
   g.append(formeT);
-  v.append(g);
-  g.querySelectorAll(".t-val").forEach(x => compterJusqua(x));
+  if (!accueilMasque("tuiles")) { v.append(g); g.querySelectorAll(".t-val").forEach(x => compterJusqua(x)); }
+  blocEvolutionAccueil(v);
 
   // Dernier / prochain match, dernier but, dernière passe
   const passes = matchsJouesChrono();
@@ -3264,21 +3433,18 @@ function rendreAccueil() {
   const butsTri = ETAT.buts.filter(b => !b.csc).sort((a, b) => ((dateDe(a) || "") < (dateDe(b) || "") ? 1 : -1));
   const passesTri = [...ETAT.passes].sort((a, b) => ((dateDe(a) || "") < (dateDe(b) || "") ? 1 : -1));
   const l = el("ul", { class: "liste" });
-  l.append(el("li", { class: "groupe-tete", text: "Prochain match" }));
-  l.append(prochain ? itemMatch(prochain) : el("li", { class: "vide petit", text: "Aucun match à venir. Ajoute un match sans score pour le voir ici." }));
-  l.append(el("li", { class: "groupe-tete", text: "Dernier match" }));
-  l.append(dernier ? itemMatch(dernier) : el("li", { class: "vide petit", text: "Pas encore de match enregistré." }));
   l.append(el("li", { class: "groupe-tete", text: "Dernier but" }));
   l.append(butsTri[0] ? ligneBut(butsTri[0]) : el("li", { class: "vide petit", text: "Pas encore de but." }));
   l.append(el("li", { class: "groupe-tete", text: "Dernière passe décisive" }));
   if (passesTri[0]) { const pp = passesTri[0], mm = matchDe(pp); l.append(el("li", {}, el("button", { class: "item", type: "button", onclick: () => editerPasse(pp) }, el("span", { class: "i-ico", text: "🎯" }), el("span", { class: "i-txt" }, el("b", { text: `Pour ${pp.buteur || "un coéquipier"}` }), el("span", { text: mm ? `${court(mm.d)} · vs ${mm.adv || "?"}` : court(pp.d) }))))); }
   else l.append(el("li", { class: "vide petit", text: "Pas encore de passe décisive." }));
-  v.append(carte("📅 En ce moment", l));
+  if (!accueilMasque("encemoment")) v.append(carte("⚽ Dernier but et dernière passe", l));
 
-  v.append(carte("📈 Total carrière et saison", tableau(["", "Carrière", fmtSaison(sa)], [
+  if (!accueilMasque("total")) v.append(carte("📈 Total carrière et saison", tableau(["", "Carrière", fmtSaison(sa)], [
     { cells: ["Matchs", tot.matchs, sai.matchs] }, { cells: ["Buts", tot.nbButs, sai.nbButs] }, { cells: ["Passes décisives", tot.nbPasses, sai.nbPasses] },
     { cells: ["Minutes", tot.min, sai.min] }, { cells: ["Buts / match", fmt(tot.bpm), fmt(sai.bpm)] }, { cells: ["Buts + passes / 90 min", fmt(tot.ga90), fmt(sai.ga90)] }
   ]), tot.rapides ? el("p", { class: "aide", text: `Dont ${pluriel(tot.rapides, "but")} du compteur rapide, pas encore rattaché${tot.rapides > 1 ? "s" : ""} à un match.` }) : null));
+  v.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("🏠 Personnaliser l'accueil", personnaliserAccueil, "lien")));
 }
 
 // ---------- COMPTEUR RAPIDE (même fonctionnement qu'avant) ----------
@@ -3416,28 +3582,7 @@ function renderDetail() {
 
 // ---------- MATCHS ----------
 const filtreMatchs = { saison: "", comp: "" };
-function rendreMatchs() {
-  const v = $("v-matchs"); v.textContent = "";
-  v.append(el("header", { class: "top" }, el("h1", { text: "Mes matchs 🏟️" }), bouton("＋ Match", () => editerMatch(null), "mini vert")));
-  const saisons = saisonsConnues();
-  v.append(el("div", { class: "duo" },
-    selectFiltre("fmS", "Saison", [["", "Toutes les saisons"], ...saisons.map(s => [s, fmtSaison(s)])], filtreMatchs.saison, x => { filtreMatchs.saison = x; rendreMatchs(); }),
-    selectFiltre("fmC", "Compétition", [["", "Toutes les compétitions"], ...COMPS], filtreMatchs.comp, x => { filtreMatchs.comp = x; rendreMatchs(); })));
-  const ms = matchsTries().filter(m => matchOk(m, filtreMatchs));
-  if (!ms.length) {
-    v.append(carte(null, el("p", { class: "vide", text: ETAT.matchs.length ? "Aucun match avec ces filtres." : "Aucun match pour l'instant. Ajoute ton premier match : tes buts, passes et minutes seront ensuite comptés automatiquement partout." }), bouton("＋ Ajouter un match", () => editerMatch(null), "mini vert")));
-    return;
-  }
-  const avenir = ms.filter(aVenir).reverse();
-  if (avenir.length) v.append(carte("📅 À venir", el("ul", { class: "liste" }, avenir.map(itemMatch))));
-  const parSaison = {};
-  ms.filter(m => !aVenir(m)).forEach(m => { const s = saisonMatch(m); (parSaison[s] = parSaison[s] || []).push(m); });
-  Object.keys(parSaison).sort().reverse().forEach(s => {
-    const st = calculer({ ...filtreMatchs, saison: s });
-    v.append(carte(el("div", { class: "carte-tete" }, el("h2", { text: `Saison ${fmtSaison(s)}` }), el("span", { class: "puce", text: `${st.v}V ${st.n}N ${st.d}D · ⚽ ${st.nbButs}` })),
-      el("ul", { class: "liste" }, parSaison[s].map(itemMatch))));
-  });
-}
+// rendreMatchs : voir 19-matchs.js (centre des matchs)
 
 // ---------- STATS ----------
 const filtreStats = { saison: "", club: "", comp: "", equipe: "" };
@@ -3454,7 +3599,7 @@ function blocStats(s) {
   const fr = el("div", { class: "form" });
   fr.append(titreSection("Général"), grilleStats([
     ["Matchs", s.matchs], ["Titulaire", s.tit], ["Remplaçant", s.rem], ["Minutes", s.min], ["Victoires", s.v], ["Nuls / défaites", `${s.n} / ${s.d}`],
-    ["Homme du match", s.hdm], ["Note moyenne", s.note != null ? fmt(s.note) : "–"], ["Clean sheets", s.cs]]));
+    ["Homme du match", s.hdm], ["Note moyenne", s.note != null ? fmt(s.note) : "–"], ["Clean sheets", s.cs], ["Minutes par but", s.nbButs && s.min ? `${Math.round(s.min / s.nbButs)} min` : "–"]]));
   fr.append(titreSection("Buts"), grilleStats([
     ["Buts", s.nbButs], ["Passes décisives", s.nbPasses], ["Buts / match", fmt(s.bpm)], ["Passes / match", fmt(s.ppm)], ["Buts / 90 min", fmt(s.b90)], ["Passes / 90 min", fmt(s.p90)],
     ["Buts + passes / 90", fmt(s.ga90)], ["De la tête", s.tete], ["Pied droit", s.droit], ["Pied gauche", s.gauche], ["Dans la surface", s.surface], ["Hors surface", s.hors],
@@ -3482,6 +3627,7 @@ function rendreStats() {
     [["", "Club + sélection"], ["club", "En club"], ["sel", "🌍 En sélection"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(filtreStats.equipe === k), onclick: () => maj("equipe", k) }, l))));
   const f = filtreDepuis(filtreStats);
   const s = calculer(f);
+  v.append(carteGraphiques(f));
   v.append(carte(null, blocStats(s), s.rapides ? el("p", { class: "aide", text: `Inclut ${pluriel(s.rapides, "but")} du compteur rapide sans match (non comptés dans les filtres club et compétition).` }) : null));
 
   // Jamais mélangées : une ligne par compétition
@@ -3507,22 +3653,26 @@ const MENU = [
   ["records", "📈", "Records"], ["forme", "🔥", "Forme et séries"], ["clubs", "👕", "Clubs, transferts"],
   ["nationale", "🌍", "Équipe nationale"], ["blessures", "🩹", "Blessures"], ["timeline", "🕰️", "Timeline"],
   ["moments", "✨", "Mes moments"], ["comparer", "⚖️", "Comparer"], ["recherche", "🔎", "Recherche"],
-  ["sauvegarde", "💾", "Sauvegarde"]
+  ["sauvegarde", "💾", "Sauvegarde"], ["capture", "📸", "Importer une capture"], ["compteur", "⚽", "Compteur rapide"],
+  ["lieux", "📍", "Lieux et stades"], ["competitions", "🏆", "Compétitions"]
 ];
 // Menu « Plus » regroupé en 8 sections (rien n'est supprimé, tout est rangé)
 const GROUPES_PLUS = [
   ["Entraînement", ["entrainement"]],
   ["Travail du coach", ["travail", "messages", "calendrier"]],
-  ["Ma carrière", ["carriere", "saisons", "clubs", "nationale", "timeline", "blessures"]],
-  ["Mes stats", ["buts", "passes", "penaltys", "coupsfrancs", "multi", "records", "forme"]],
-  ["Mon palmarès", ["palmares", "coupes", "ligue"]],
+  ["Ma carrière", ["capture", "carriere", "saisons", "clubs", "nationale", "timeline", "blessures"]],
+  ["Mes stats", ["compteur", "buts", "passes", "penaltys", "coupsfrancs", "multi", "records", "forme"]],
+  ["Mon palmarès", ["palmares", "competitions", "coupes", "ligue"]],
+  ["Lieux", ["lieux"]],
   ["Mes moments", ["galerie", "moments"]],
   ["Comparer et rechercher", ["comparer", "recherche"]],
   ["Mon profil", ["profil", "equipe", "reglages", "sauvegarde"]]
 ];
 function rendrePlus() {
   const v = $("v-plus"); v.textContent = "";
-  v.append(el("header", { class: "top" }, el("h1", { text: "Toute ma carrière ☰" })));
+  v.append(el("header", { class: "top" }, el("h1", { text: "Mon profil 👤" }), el("button", { class: "rond lg cloche", type: "button", "aria-label": "Réglages", onclick: () => ouvrirSection("reglages") }, "⚙️")));
+  v.append(ficheJoueurPro(), carteBadges(), carteObjectifs(), carteFavoris());
+  v.append(el("p", { class: "section-titre", text: "Toute ma carrière" }));
   const vus = new Set();
   GROUPES_PLUS.forEach(([titre, cles]) => {
     const items = cles.map(k => MENU.find(m => m[0] === k)).filter(Boolean);
@@ -3534,6 +3684,8 @@ function rendrePlus() {
   if (reste.length) v.append(el("p", { class: "section-titre", text: "Autres" }), el("div", { class: "menu" }, reste.map(([k, ico, nom]) => el("button", { class: "lg", type: "button", onclick: () => ouvrirSection(k) }, el("span", { class: "ico", text: ico }), nom))));
 }
 function ouvrirSection(nom) {
+  if (nom === "capture") { lancerImportCapture(); return; }
+  if (nom === "compteur" || nom === "competitions") { allerVue(nom); return; }
   if (nom === "coupes" || nom === "ligue" || VUES_LIBRES.has(nom)) { allerVue(nom); return; }
   if (nom === "profil") { editerProfil(); return; }
   const avant = vueAffichee;
@@ -3914,6 +4066,8 @@ SECTIONS.forme = v => {
 // ---------- Clubs et transferts ----------
 SECTIONS.clubs = v => {
   v.append(el("header", { class: "top" }, el("h1", { text: "Clubs et transferts 👕" }), bouton("＋ Transfert", () => editerTransfert(null), "mini vert")));
+  const semblables = carteClubsSemblables();
+  if (semblables) v.append(semblables);
   v.append(carte("🕰️ Ma timeline de clubs", timelineClubs()));
   const clubs = clubsConnus();
   if (clubs.length) {
@@ -3923,7 +4077,7 @@ SECTIONS.clubs = v => {
     v.append(carte("📊 Comparaison des clubs", tableau(["Club", ...cols.map(c => c[1]), "B/M", "P/M"], st.map(([c, x]) => ({
       cells: [c, ...cols.map(([k]) => x[k]), fmt(x.bpm), fmt(x.ppm)],
       mieux: cols.map(([k], i) => (x[k] && x[k] === best(k) && !["cj", "cr"].includes(k) ? i + 1 : -1)).filter(i => i > 0)
-    })), { cls: "cmp" })));
+    })), { cls: "cmp" }), clubs.length > 1 ? bouton("🔗 Fusionner deux clubs", feuilleFusion, "mini gris") : ""));
   }
   const tr = [...ETAT.transferts].sort((a, b) => ((a.d || "") < (b.d || "") ? 1 : -1));
   v.append(carte("🔁 Mes transferts", tr.length ? el("ul", { class: "liste" }, tr.map(t => el("li", {}, el("button", { class: "item", type: "button", onclick: () => editerTransfert(t) },
@@ -4021,14 +4175,15 @@ const cmp = { mode: "saisons", a: "", b: "" };
 SECTIONS.comparer = v => {
   v.append(el("header", { class: "top" }, el("h1", { text: "Comparer ⚖️" })));
   const rendre = () => rendreSection("comparer");
-  v.append(el("div", { class: "filtres" }, [["saisons", "Mes saisons"], ["clubs", "Mes clubs"], ["joueurs", "D'autres joueurs"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(cmp.mode === k), onclick: () => { cmp.mode = k; cmp.a = ""; cmp.b = ""; rendre(); } }, l))));
+  v.append(el("div", { class: "filtres" }, [["saisons", "Mes saisons"], ["clubs", "Mes clubs"], ["comps", "Compétitions"], ["joueurs", "D'autres joueurs"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(cmp.mode === k), onclick: () => { cmp.mode = k; cmp.a = ""; cmp.b = ""; rendre(); } }, l))));
   let opts, stat;
   const moi = calculer({});
   const ligneMoi = { matchs: moi.matchs, buts: moi.nbButs, passes: moi.nbPasses, minutes: moi.min, trophees: moi.trophees, recompenses: moi.recompenses, selections: moi.selections, butsInter: calculer({ sel: true }).nbButs };
   if (cmp.mode === "saisons") { opts = saisonsConnues().map(s => [s, fmtSaison(s)]); stat = k => { const x = calculer({ saison: k }); return { matchs: x.matchs, buts: x.nbButs, passes: x.nbPasses, minutes: x.min, trophees: x.trophees, recompenses: x.recompenses, selections: x.selections, butsInter: calculer({ saison: k, sel: true }).nbButs }; }; }
   else if (cmp.mode === "clubs") { opts = clubsConnus().map(c => [c, c]); stat = k => { const x = calculer({ club: k }); return { matchs: x.matchs, buts: x.nbButs, passes: x.nbPasses, minutes: x.min, trophees: x.trophees, recompenses: x.recompenses }; }; }
+  else if (cmp.mode === "comps") { opts = compsJouees().map(([k, l]) => [k, l]); stat = k => { const x = calculer({ comp: k }); return { matchs: x.matchs, buts: x.nbButs, passes: x.nbPasses, minutes: x.min, trophees: x.trophees, recompenses: x.recompenses }; }; }
   else { opts = [["moi", nomJoueur() || "Moi"], ...ETAT.joueurs.map(j => [j.id, j.nom || "Joueur"])]; stat = k => (k === "moi" ? ligneMoi : (() => { const j = ETAT.joueurs.find(x => x.id === k) || {}; return { matchs: n0(j.matchs), buts: n0(j.buts), passes: n0(j.passes), minutes: n0(j.minutes), trophees: n0(j.trophees), recompenses: n0(j.recompenses), selections: n0(j.selections), butsInter: n0(j.butsInter) }; })()); if (!cmp.a) cmp.a = "moi"; }
-  if (opts.length < 2 && cmp.mode !== "joueurs") { v.append(carte(null, el("p", { class: "vide", text: `Il faut au moins deux ${cmp.mode === "saisons" ? "saisons" : "clubs"} avec des matchs pour comparer.` }))); }
+  if (opts.length < 2 && cmp.mode !== "joueurs") { v.append(carte(null, el("p", { class: "vide", text: `Il faut au moins deux ${cmp.mode === "saisons" ? "saisons" : cmp.mode === "comps" ? "compétitions" : "clubs"} avec des matchs pour comparer.` }))); }
   if (!cmp.a && opts[0]) cmp.a = opts[0][0];
   if (!cmp.b && opts[1]) cmp.b = opts[1][0];
   if (cmp.mode === "joueurs") v.append(carte(el("div", { class: "carte-tete" }, el("h2", { text: "Joueurs à comparer" }), bouton("＋ Joueur", () => editerJoueur(null), "mini vert")),
@@ -4227,24 +4382,7 @@ function renderCoupes() {
 function feterCoupe(nom) { feter("🏆 Champion !", nom); }
 
 // ---------- Ligue ----------
-function classement() {
-  const t = {};
-  const base = ETAT.ligue.base || {};
-  ETAT.ligue.equipes.forEach(n => {
-    const b = base[n] || {};
-    t[n] = { n, j: +b.j || 0, g: 0, nu: 0, p: 0, bp: 0, bc: 0, bd: +b.diff || 0, pts: +b.pts || 0 };
-  });
-  ETAT.ligue.matchs.forEach(m => {
-    const A = t[m.a], B = t[m.b];
-    if (!A || !B) return;
-    A.j++; B.j++; A.bp += m.sa; A.bc += m.sb; B.bp += m.sb; B.bc += m.sa;
-    if (m.sa > m.sb) { A.g++; B.p++; A.pts += 3; }
-    else if (m.sa < m.sb) { B.g++; A.p++; B.pts += 3; }
-    else { A.nu++; B.nu++; A.pts++; B.pts++; }
-  });
-  const dif = e => e.bp - e.bc + e.bd;
-  return Object.values(t).sort((x, y) => y.pts - x.pts || dif(y) - dif(x) || y.bp - x.bp || x.n.localeCompare(y.n, "fr"));
-}
+// classement() : voir 20-competitions.js (règles de points, matchs ajoutés automatiquement)
 const td = (txt, cls) => { const c = document.createElement("td"); c.textContent = txt; if (cls) c.className = cls; return c; };
 // Classement envoyé en capture d'écran (FFF, U15 - U14 2, le 26/10/2026)
 const IMPORT = {
@@ -5134,10 +5272,11 @@ async function petiteImage(fichier, cote) {
 const NAV = {
   PLAYER: [
     ["accueil", "Accueil", '<path fill="currentColor" d="M12 3.2 2.6 11a1 1 0 0 0 1.3 1.5l.9-.8V20a1.5 1.5 0 0 0 1.5 1.5H9.5V15h5v6.5h3.2A1.5 1.5 0 0 0 19.2 20v-8.3l.9.8A1 1 0 0 0 21.4 11Z"/>'],
-    ["compteur", "Compteur", null, "⚽"],
-    ["matchs", "Matchs", null, "🏟️"],
+    ["matchs", "Matchs", '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="m12 7.2 3.4 2.5-1.3 4h-4.2l-1.3-4Z"/><path stroke="currentColor" stroke-width="1.6" fill="none" d="M12 3v4.2M15.4 9.7l4.1-1.4M14.1 13.7l2.6 3.6M9.9 13.7l-2.6 3.6M8.6 9.7 4.5 8.3"/>'],
     ["stats", "Stats", '<rect fill="currentColor" x="3.5" y="12" width="4.2" height="9" rx="1.3"/><rect fill="currentColor" x="9.9" y="7.5" width="4.2" height="13.5" rx="1.3"/><rect fill="currentColor" x="16.3" y="3" width="4.2" height="18" rx="1.3"/>'],
-    ["plus", "Plus", '<rect fill="currentColor" x="3.5" y="5" width="17" height="2.6" rx="1.3"/><rect fill="currentColor" x="3.5" y="10.7" width="17" height="2.6" rx="1.3"/><rect fill="currentColor" x="3.5" y="16.4" width="17" height="2.6" rx="1.3"/>']
+    ["competitions", "Compét.", '<path fill="currentColor" d="M7 3h10v2h3v2.5a4.5 4.5 0 0 1-4.1 4.5A5 5 0 0 1 13 14.8V18h3.5v3h-9v-3H11v-3.2A5 5 0 0 1 8.1 12 4.5 4.5 0 0 1 4 7.5V5h3Zm-1 4v.5a2.5 2.5 0 0 0 1.4 2.2A7 7 0 0 1 7 7Zm12 0h-1a7 7 0 0 1-.4 2.7A2.5 2.5 0 0 0 18 7.5Z"/>'],
+    ["equipe-j", "Équipe", '<circle fill="currentColor" cx="8.5" cy="8" r="3.4"/><circle fill="currentColor" cx="16.5" cy="9" r="2.7"/><path fill="currentColor" d="M2.5 19.2c0-3.4 2.7-5.7 6-5.7s6 2.3 6 5.7v.8h-12Z"/><path fill="currentColor" d="M15.6 20v-.8c0-1.7-.5-3.2-1.5-4.4.7-.4 1.5-.6 2.4-.6 2.7 0 5 1.9 5 4.8v1Z"/>'],
+    ["plus", "Profil", '<circle fill="currentColor" cx="12" cy="8" r="4.2"/><path fill="currentColor" d="M3.8 20.2c0-4.3 3.7-7.2 8.2-7.2s8.2 2.9 8.2 7.2v.8H3.8Z"/>']
   ],
   COACH: [
     ["c-accueil", "Accueil", '<path fill="currentColor" d="M12 3.2 2.6 11a1 1 0 0 0 1.3 1.5l.9-.8V20a1.5 1.5 0 0 0 1.5 1.5H9.5V15h5v6.5h3.2A1.5 1.5 0 0 0 19.2 20v-8.3l.9.8A1 1 0 0 0 21.4 11Z"/>'],
@@ -5161,6 +5300,7 @@ function construireNav(role) {
     nav.append(b);
   });
   nav.dataset.role = role;
+  nav.style.setProperty("--nb", NAV[role].length);
 }
 function appliquerRole() {
   document.body.classList.remove("onb-mode");
@@ -6480,7 +6620,7 @@ function bulleMessage(m) {
       x.date ? el("p", { text: "📅 " + joli(x.date) }) : null,
       x.rdv ? el("p", { text: "🕒 Rendez-vous : " + x.rdv }) : null,
       x.heure ? el("p", { text: "⚽ Match : " + x.heure }) : null,
-      x.lieu ? el("p", { text: "📍 " + x.lieu }) : null));
+      x.lieu ? el("p", { text: "📍 " + x.lieu }) : null), blocPresence(m.item || m));
   }
   if (m.texte) b.append(el("p", { class: "msg-txt", text: m.texte }));
   b.append(barreReactions(m));
@@ -6667,7 +6807,7 @@ function notifications() {
     }));
   }
   messagesEquipe().filter(m => !m.coach && m.de !== EQ.moi && m.t > vu).forEach(m => out.push({ id: "m-" + m.id, txt: "💬 " + m.auteurNom, sous: m.texte, t: m.t, nouveau: true, ouvrir: () => allerVue(coach ? "c-messages" : "messages") }));
-  return out.sort((a, b) => b.t - a.t);
+  return filtrerNotifs(out.concat(notifsPerso())).sort((a, b) => b.t - a.t);
 }
 function nbNonLus() { return notifications().filter(n => n.nouveau).length; }
 function boutonCloche() {
@@ -6730,8 +6870,9 @@ function blocsAccueilJoueur(v) {
   } else if (EQ.ok && (stj === "aucune" || stj === "refuse" || stj === "introuvable")) {
     v.append(el("button", { class: "carte lg rejoindre-carte", type: "button", onclick: () => ouvrirSection("equipe") }, el("b", { text: "👥 Rejoins ton équipe" }), el("span", { class: "muted petit", text: "Entre le code donné par ton coach pour recevoir ses exercices et messages." })));
   } else if (stj === "attente") v.append(carte(null, messageStatut("attente")));
-  const evs = evenementsTous().filter(e => e.d >= aujourdHui() && e.ico !== "🏋️").slice(0, 3);
-  v.append(carte(null, el("div", { class: "carte-tete" }, el("h2", { text: "📅 À venir" }), bouton("Calendrier ›", () => allerVue("calendrier"), "capsule lg")),
+  // mes propres matchs sont déjà dans la carte « Prochain match »
+  const evs = evenementsTous().filter(e => e.d >= aujourdHui() && e.ico !== "🏋️" && e.ico !== "🏟️").slice(0, 3);
+  if (evs.length) v.append(carte(null, el("div", { class: "carte-tete" }, el("h2", { text: "📅 À venir" }), bouton("Calendrier ›", () => allerVue("calendrier"), "capsule lg")),
     evs.length ? el("ul", { class: "liste" }, evs.map(e => el("li", {}, el("button", { class: "item", type: "button", onclick: e.ouvrir }, el("span", { class: "i-ico", text: e.ico }), el("span", { class: "i-txt" }, el("b", { text: e.txt }), el("span", { text: [quandTxt(e.d, "").replace(/ — $/, ""), e.sous].filter(Boolean).join(" · ") })), el("span", { class: "i-droite", text: "›" }))))) : el("p", { class: "vide", text: "Rien de prévu pour l'instant." })));
 }
 
@@ -6749,9 +6890,9 @@ SECTIONS.equipe = v => {
     v.append(el("div", { class: "duo" }, bouton("📋 Travail du coach", () => allerVue("travail"), "btn btn-total lg"), bouton("💬 Messages", () => allerVue("messages"), "btn btn-total lg")));
     v.append(carte("Ce que voit ton coach", el("p", { class: "aide", text: "Ton prénom, ton nom, ton poste, ton numéro, tes objectifs et le résumé de tes entraînements (nombre, temps, catégories travaillées), plus tes retours sur ses exercices. Jamais ta photo, ta date de naissance ni ta carrière." })));
   } else {
-    v.append(carte("👥 Mon équipe", messageStatut(st), st === "aucune" || st === "refuse" || st === "introuvable" ? blocRejoindreJoueur(() => rendreSection("equipe")) : null));
+    v.append(carte("👥 Mon équipe", messageStatut(st), st === "aucune" || st === "refuse" || st === "introuvable" ? blocRejoindreJoueur(() => (vueCourante === "equipe-j" ? rendreVue() : rendreSection("equipe"))) : null));
   }
-  if (EQ.monJoueur && EQ.monJoueur.equipe) v.append(el("div", { class: "form-actions" }, bouton(st === "attente" ? "Annuler ma demande" : "Quitter l'équipe", () => confirmer("Quitter l'équipe ? Ton coach ne verra plus ta progression.", async () => { if (await quitterEquipeJoueur()) { toast("Tu as quitté l'équipe."); rendreSection("equipe"); } }), "lien danger")));
+  if (EQ.monJoueur && EQ.monJoueur.equipe) v.append(el("div", { class: "form-actions" }, bouton(st === "attente" ? "Annuler ma demande" : "Quitter l'équipe", () => confirmer("Quitter l'équipe ? Ton coach ne verra plus ta progression.", async () => { if (await quitterEquipeJoueur()) { toast("Tu as quitté l'équipe."); vueCourante === "equipe-j" ? rendreVue() : rendreSection("equipe"); } }), "lien danger")));
 };
 SECTIONS.reglages = v => { v.append(blocReglages()); };
 function ouvrirReglages() { feuille("Réglages", corps => corps.append(blocReglages())); }
@@ -6774,6 +6915,10 @@ function blocReglages() {
     bouton("Refaire la création de mon profil", () => { pile.slice().forEach(x => x.fermer()); demarrerOnboarding(role === "COACH" ? "COACH" : "PLAYER", true); }, "lien"),
     el("p", { class: "aide", text: "Changer d'espace ne donne aucun droit sur l'équipe d'un autre coach : le serveur ne laisse chacun modifier que ses propres données." })));
   if (role === "COACH" && EQ.maTeam && EQ.maTeam.rejoint) box.append(carte("👥 Staff", bouton("Quitter le staff de cette équipe", () => confirmer("Quitter le staff ?", async () => { await quitterStaff(); pile.slice().forEach(x => x.fermer()); toutRafraichir(); }), "lien danger")));
+  blocsReglagesPlus(box);
+  box.append(carte("🧹 Tout recommencer",
+    el("p", { class: "aide", text: "Efface toute ta carrière et ton profil, comme si tu ouvrais l'appli pour la première fois." }),
+    bouton("Tout réinitialiser", () => { demanderReinitialisation(); }, "mini rouge")));
   box.append(carte("🔒 Confidentialité et sécurité", el("ul", { class: "consignes" },
     el("li", { text: "Ta carrière, ta photo, ta date de naissance et tes entraînements détaillés restent privés sur ton compte." }),
     el("li", { text: "Seules les personnes invitées sur l'appli peuvent lire les données d'une équipe ; rejoindre une équipe demande son code ET la validation du coach." }),
@@ -6794,8 +6939,1228 @@ Object.assign(VUES_EXTRA, {
   entrainement: rendreEntrainement, travail: rendreTravail, calendrier: rendreCalendrier,
   messages: rendreMessages, bibliotheque: rendreBibliotheque,
   "c-accueil": rendreCoachAccueil, "c-equipe": rendreCoachEquipe, "c-seances": rendreCoachSeances,
-  "c-cahier": rendreCoachCahier, "c-messages": rendreMessages
+  "c-cahier": rendreCoachCahier, "c-messages": rendreMessages,
+  competitions: rendreCompetitions, "equipe-j": rendreEquipeJoueur
 });
+
+// =====================================================================
+//  IMPORT PAR CAPTURE D'ÉCRAN
+//  Le joueur choisit une ou plusieurs captures (feuille de match, appli du
+//  club, résultats, tableau de stats…). Claude les lit et propose les
+//  matchs, buts et passes trouvés. Rien n'est ajouté avant validation.
+//  Ne marche que dans l'appli Claude (capacité « sample » avec images).
+// =====================================================================
+let lecteurIA = undefined;   // undefined : pas encore demandé ; null : indisponible
+function obtenirLecteurIA() {
+  if (lecteurIA !== undefined) return Promise.resolve(lecteurIA);
+  if (!window.claude?.use) { lecteurIA = null; return Promise.resolve(null); }
+  return claude.use("sample").then(async s => {
+    if (!s) return (lecteurIA = null);
+    const lim = await s.limits().catch(() => null);
+    lecteurIA = lim?.images ? { s, lim: lim.images } : null;
+    return lecteurIA;
+  }).catch(() => (lecteurIA = null));
+}
+
+const COMPS_IA = COMPS.map(c => c[0]).join(", ");
+function promptCapture() {
+  const p = ETAT.profil || {};
+  const nom = [p.prenom, p.nom].filter(Boolean).join(" ") || "le joueur";
+  const club = p.club || "";
+  return `Tu lis une ou plusieurs captures d'écran envoyées par un jeune footballeur qui tient le carnet de sa carrière.
+Le joueur s'appelle : ${nom}${p.numero ? ` (numéro ${p.numero})` : ""}. Son équipe : ${club || "inconnue"}.
+Aujourd'hui nous sommes le ${aujourdHui()}. Si une date n'a pas d'année, choisis l'année la plus récente qui ne soit pas dans le futur.
+
+Relève chaque match visible (résultats, calendrier, feuille de match, appli du club, tableau de stats…).
+Pour chaque match, indique uniquement ce qui est réellement écrit sur la capture (n'invente rien, mets null si absent) :
+- d : date "AAAA-MM-JJ" ou null
+- club : nom de l'équipe du joueur, adv : nom de l'adversaire
+- lieu : "dom" si l'équipe du joueur reçoit (nommée en premier), "ext" si elle se déplace, null si inconnu
+- bp : buts de l'équipe du joueur, bc : buts de l'adversaire (null si match pas encore joué)
+- comp : une valeur parmi ${COMPS_IA} (championnat → "champ", coupe départementale/régionale → "coupeReg", amical → "amical", tournoi → "tournoi")
+- compNom : nom précis de la compétition s'il est écrit (ex. "U14 D2")
+- tour : journée ou tour s'il est écrit
+- buts : nombre de buts marqués PAR CE JOUEUR (pas par l'équipe) ; minutes : liste des minutes de ses buts si elles sont écrites
+- passes : nombre de passes décisives du joueur ; minutesPasses : leurs minutes si écrites
+- cj, cr : cartons jaunes / rouges du joueur ; note : note sur 10 si écrite ; min : minutes jouées si écrites
+- titulaire : true, false ou null
+- heure : heure du coup d'envoi "HH:MM" si écrite ; stade, ville : lieu du match si écrit
+- buteursEquipe : tous les buteurs de l'équipe du joueur s'ils sont écrits, [{"nom":"Lucas","min":12,"passe":"Adam"}] (min et passe à null si absents), sinon []
+Si la capture ne permet pas de savoir quels buts sont ceux du joueur, mets buts à null.
+
+Réponds UNIQUEMENT avec ce JSON :
+{"matchs":[{"d":"2026-10-18","club":"FC La Sure","adv":"Voiron","lieu":"dom","bp":3,"bc":1,"comp":"champ","compNom":null,"tour":"Journée 5","buts":2,"minutes":[12,55],"passes":0,"minutesPasses":[],"cj":0,"cr":0,"note":null,"min":null,"titulaire":true,"heure":"10:30","stade":null,"ville":null,"buteursEquipe":[{"nom":"Chahid","min":12,"passe":null}]}],"remarque":"phrase courte si quelque chose n'était pas lisible, sinon null"}
+S'il n'y a aucun match sur les images, réponds {"matchs":[],"remarque":"ce que montrent les images"}.`;
+}
+
+function fichiersCapture(max, rappel) {
+  const inp = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif", style: "position:fixed;left:-999px;opacity:0" });
+  if (max > 1) inp.multiple = true;
+  inp.addEventListener("change", () => { const fs = [...inp.files].slice(0, max); inp.remove(); if (fs.length) rappel(fs); });
+  document.body.append(inp);
+  inp.click();
+}
+
+async function lancerImportCapture() {
+  const ia = await obtenirLecteurIA();
+  if (!ia) {
+    feuille("Importer une capture", corps => {
+      corps.append(el("p", { text: "📸 Cette fonction utilise Claude pour lire tes captures d'écran." }),
+        el("p", { class: "aide", text: "Elle marche seulement quand tu ouvres l'appli dans Claude (pas sur le site Safari). Ouvre « Mon Compteur de Buts » dans l'appli Claude, puis reviens ici." }));
+    });
+    return;
+  }
+  const max = Math.min(ia.lim.maxCount || 1, 5);
+  feuille("Importer une capture", (corps, f) => {
+    corps.append(
+      el("p", { text: "📸 Prends une capture de tes résultats (appli du club, feuille de match, site de la ligue, tableau de stats…) et je recrée tes matchs, buts et passes." }),
+      el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Tu vérifies tout avant que ce soit ajouté.` }),
+      bouton("📷 Choisir mes captures", () => fichiersCapture(max, fs => { f.fermer(); analyserCaptures(ia, fs); }), "mini vert capt-gros"));
+  });
+}
+
+function analyserCaptures(ia, fichiers) {
+  const ctl = new AbortController();
+  let fini = false;
+  const fe = feuille("Lecture en cours…", corps => {
+    const apercus = el("div", { class: "capt-apercus" }, fichiers.map(fi => { const u = URL.createObjectURL(fi); const i = el("img", { src: u, alt: "Capture" }); i.onload = () => URL.revokeObjectURL(u); return i; }));
+    corps.append(apercus,
+      el("div", { class: "capt-attente" }, el("span", { class: "capt-rond", "aria-hidden": "true" }), el("span", { id: "captEtat", text: "Claude regarde tes captures… (ça peut prendre jusqu'à une minute)" })),
+      bouton("Arrêter", () => ctl.abort(), "mini gris"));
+  }, { critique: true, onClose: () => { if (!fini) ctl.abort(); } });
+  ia.s.json(promptCapture(), { images: fichiers, signal: ctl.signal, cache: false })
+    .then(r => { fini = true; fe.fermer(); verifierImport(nettoyerImport(r)); })
+    .catch(e => {
+      fini = true; fe.fermer();
+      if (e?.code === "cancelled") return;
+      const msg = {
+        not_granted: "Tu as refusé l'accès à Claude. Tu peux le réactiver dans les autorisations de l'appli.",
+        sampling_disabled: "Claude n'est pas disponible sur ce compte.",
+        rate_limited: "Trop de demandes pour l'instant. Réessaie dans un moment.",
+        image_rejected: "Cette image n'a pas pu être lue. Essaie avec une autre capture (PNG ou JPEG).",
+        invalid_json: "Je n'ai pas réussi à lire les matchs sur cette capture. Essaie avec une image plus nette.",
+        refused: "Claude n'a pas pu traiter cette image.",
+        session_expired: "Reconnecte-toi à Claude puis réessaie."
+      }[e?.code] || "Problème de connexion. Réessaie.";
+      if (["not_granted", "sampling_disabled", "images_unavailable", "not_declared"].includes(e?.code)) lecteurIA = null;
+      toast(msg, 6000);
+    });
+}
+
+// le club lu sur la capture → un club déjà connu s'il lui ressemble (« FC La Sure 2 » → « FC La Sure »)
+function clubImport(brut) {
+  const nom = String(brut || "").trim().slice(0, 60);
+  if (!nom) return ETAT.profil.club || "";
+  const off = clubOfficiel(nom);
+  if (off !== nom) return off;
+  const connu = clubsConnus().find(c => cleClub(c) === cleClub(nom)) || clubsConnus().find(c => baseClub(c) && baseClub(c) === baseClub(nom) && !(ETAT.profil.clubsDistincts || []).includes(paireCle(c, nom)));
+  return connu || nom;
+}
+const entierOuNull = v => { const x = num(v); return x == null ? null : Math.max(0, Math.round(x)); };
+function nettoyerImport(r) {
+  const brut = Array.isArray(r) ? r : Array.isArray(r?.matchs) ? r.matchs : [];
+  const codes = new Set(COMPS.map(c => c[0]));
+  const matchs = brut.slice(0, 40).filter(x => x && typeof x === "object").map(x => {
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(String(x.d || "")) ? String(x.d) : "";
+    const minutes = l => Array.isArray(l) ? l.map(entierOuNull).filter(v => v != null && v <= 130) : [];
+    const m = {
+      d, club: clubImport(x.club), adv: String(x.adv || "").slice(0, 60),
+      lieu: ["dom", "ext", "neutre"].includes(x.lieu) ? x.lieu : "dom",
+      bp: entierOuNull(x.bp), bc: entierOuNull(x.bc),
+      comp: codes.has(x.comp) ? x.comp : "champ",
+      compNom: x.compNom ? String(x.compNom).slice(0, 60) : "", tour: x.tour ? String(x.tour).slice(0, 40) : "",
+      buts: Math.min(20, entierOuNull(x.buts) || 0), minutes: minutes(x.minutes),
+      passes: Math.min(20, entierOuNull(x.passes) || 0), minutesPasses: minutes(x.minutesPasses),
+      cj: Math.min(2, entierOuNull(x.cj) || 0), cr: Math.min(1, entierOuNull(x.cr) || 0),
+      note: num(x.note) != null && num(x.note) <= 10 ? num(x.note) : null, min: entierOuNull(x.min),
+      titulaire: x.titulaire === true ? true : x.titulaire === false ? false : null,
+      heure: /^\d{1,2}[:h]\d{2}$/.test(String(x.heure || "").trim()) ? String(x.heure).trim().replace("h", ":").padStart(5, "0") : "",
+      stade: x.stade ? String(x.stade).slice(0, 60) : "", ville: x.ville ? String(x.ville).slice(0, 40) : "",
+      buteursEquipe: Array.isArray(x.buteursEquipe) ? x.buteursEquipe.slice(0, 20).filter(b => b && b.nom).map(b => `${entierOuNull(b.min) != null ? entierOuNull(b.min) + "' " : ""}${String(b.nom).slice(0, 40)}${b.passe ? ` (passe ${String(b.passe).slice(0, 40)})` : ""}`).join("\n") : "",
+      butsInconnus: x.buts === null || x.buts === undefined
+    };
+    m.doublon = !!ETAT.matchs.find(y => y.d === m.d && m.adv && (y.adv || "").toLowerCase().trim() === m.adv.toLowerCase().trim());
+    m.garder = !m.doublon && !!m.d;
+    return m;
+  });
+  return { matchs, remarque: r && typeof r.remarque === "string" ? r.remarque.slice(0, 300) : "" };
+}
+
+function verifierImport({ matchs, remarque }) {
+  if (!matchs.length) {
+    feuille("Aucun match trouvé", corps => corps.append(
+      el("p", { text: "Je n'ai pas trouvé de match sur cette capture." }),
+      remarque ? el("p", { class: "aide", text: remarque }) : "",
+      bouton("📷 Essayer une autre capture", () => { fermerHaut(); lancerImportCapture(); }, "mini vert capt-gros")));
+    return;
+  }
+  feuille("Vérifie avant d'ajouter", (corps, f) => {
+    const resume = el("p", { class: "aide" });
+    const majResume = () => {
+      const g = matchs.filter(m => m.garder);
+      resume.textContent = `${pluriel(g.length, "match")} · ⚽ ${pluriel(g.reduce((s, m) => s + m.buts, 0), "but")} · 🅰️ ${pluriel(g.reduce((s, m) => s + m.passes, 0), "passe")} seront ajoutés.`;
+      ok.disabled = !g.length;
+    };
+    const ok = bouton("✅ Ajouter à ma carrière", () => {
+      const g = matchs.filter(m => m.garder);
+      if (g.some(m => !m.d)) { toast("Mets une date à chaque match coché.", 4000); return; }
+      f.fermer(); appliquerImport(g);
+    }, "mini vert capt-gros");
+    corps.append(
+      el("p", { text: "Voici ce que j'ai lu. Corrige si besoin, décoche ce qui est faux." }),
+      remarque ? el("p", { class: "aide", text: "ℹ️ " + remarque }) : "");
+    matchs.forEach(m => corps.append(carteImport(m, majResume)));
+    corps.append(resume, ok);
+    majResume();
+  });
+}
+
+function carteImport(m, maj) {
+  const champ = (lab, input) => el("label", { class: "capt-champ" }, el("span", { text: lab }), input);
+  const nombre = (k, max) => { const i = el("input", { type: "number", inputmode: "numeric", min: "0", max: String(max), value: m[k] == null ? "" : String(m[k]) }); i.addEventListener("input", () => { m[k] = entierOuNull(i.value); if (k === "buts" || k === "passes") m[k] = m[k] || 0; maj(); }); return i; };
+  const texte = (k, ph) => { const i = el("input", { type: "text", value: m[k] || "", placeholder: ph }); i.addEventListener("input", () => { m[k] = i.value.trim(); }); return i; };
+  const date = el("input", { type: "date", value: m.d });
+  date.addEventListener("input", () => { m.d = date.value; });
+  const coche = el("input", { type: "checkbox" }); coche.checked = m.garder;
+  const boite = el("div", { class: "carte lg capt-carte" + (m.garder ? "" : " capt-off") });
+  coche.addEventListener("change", () => { m.garder = coche.checked; boite.classList.toggle("capt-off", !m.garder); maj(); });
+  const lieu = el("select", {}, LIEUX.map(([v, t]) => el("option", { value: v, text: t })));
+  lieu.value = m.lieu; lieu.addEventListener("change", () => { m.lieu = lieu.value; });
+  const comp = el("select", {}, COMPS.map(([v, t]) => el("option", { value: v, text: t })));
+  comp.value = m.comp; comp.addEventListener("change", () => { m.comp = comp.value; });
+  boite.append(
+    el("label", { class: "capt-tete" }, coche, el("b", { text: `${m.club || "Mon équipe"} ${m.bp ?? "–"} - ${m.bc ?? "–"} ${m.adv || "?"}` })),
+    m.doublon ? el("p", { class: "aide capt-alerte", text: "⚠️ Ce match semble déjà être dans ta carrière : décoché pour éviter un doublon." }) : "",
+    m.butsInconnus ? el("p", { class: "aide capt-alerte", text: "La capture ne dit pas qui a marqué : indique tes buts toi-même." }) : "",
+    el("div", { class: "capt-grille" },
+      champ("Date", date), champ("Adversaire", texte("adv", "Adversaire")),
+      champ("Buts équipe", nombre("bp", 99)), champ("Buts adverses", nombre("bc", 99)),
+      champ("⚽ Mes buts", nombre("buts", 20)), champ("🅰️ Mes passes", nombre("passes", 20)),
+      champ("Lieu", lieu), champ("Compétition", comp)));
+  return boite;
+}
+
+function appliquerImport(liste) {
+  const fin = () => {
+    let nb = 0, nbB = 0, nbP = 0;
+    liste.forEach(x => {
+      const m = { id: uid(), d: x.d, comp: x.comp, club: x.club || ETAT.profil.club || "", adv: x.adv, lieu: x.lieu,
+        statut: x.titulaire === false ? "rem" : "tit", importe: "capture" };
+      if (x.compNom) m.compNom = x.compNom;
+      if (x.tour) m.tour = x.tour;
+      if (x.bp != null) m.bp = x.bp;
+      if (x.bc != null) m.bc = x.bc;
+      if (x.cj) m.cj = x.cj;
+      if (x.cr) m.cr = x.cr;
+      if (x.note != null) m.note = x.note;
+      if (x.min != null) m.min = x.min;
+      if (x.heure) m.heure = x.heure;
+      if (x.stade) m.stade = x.stade;
+      if (x.ville) m.ville = x.ville;
+      if (x.buteursEquipe) m.buteurs = x.buteursEquipe;
+      if (COMPS_SELECTION.has(m.comp)) m.sel = true;
+      ETAT.matchs.push(m); nb++;
+      for (let i = 0; i < x.buts; i++) { const b = { id: uid(), matchId: m.id }; if (x.minutes[i] != null) b.min = x.minutes[i]; ETAT.buts.push(b); nbB++; }
+      for (let i = 0; i < x.passes; i++) { const p = { id: uid(), matchId: m.id, derniere: true }; if (x.minutesPasses[i] != null) p.min = x.minutesPasses[i]; ETAT.passes.push(p); nbP++; }
+    });
+    noter("Ajouté", `Import d'une capture : ${pluriel(nb, "match")}, ${pluriel(nbB, "but")}, ${pluriel(nbP, "passe")}`);
+    sauver(); toutRafraichir(); rafraichirFeuilles();
+    toast(`✅ ${pluriel(nb, "match")} ajouté${nb > 1 ? "s" : ""} · ⚽ ${nbB} · 🅰️ ${nbP}`, 5000);
+    if (typeof allerVue === "function") allerVue("matchs");
+  };
+  // copie de secours avant l'import quand c'est possible
+  if (assets && typeof creerBackup === "function") creerBackup("Avant import capture").catch(() => {}).finally(fin);
+  else fin();
+}
+
+// =====================================================================
+//  FUSION DE CLUBS
+//  « FC La Sure » et « FC La Sure 2 » = le même club : on renomme partout
+//  (matchs, transferts, trophées, récompenses, saisons, profil) et on retient
+//  l'alias pour que les prochains matchs (saisie ou capture) aillent au bon club.
+// =====================================================================
+const cleClub = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+// nom sans le numéro ou la lettre d'équipe à la fin (« 2 », « II », « B », « équipe 2 »)
+const paireCle = (a, b) => [cleClub(a), cleClub(b)].sort().join("|");
+// cœur du nom : sans les mots génériques (FC, AS, la, de…), sans numéro ni lettre d'équipe, dans n'importe quel ordre
+// « FC LA SURE » et « Sure FC 2 » → « sure »
+const MOTS_VIDES = new Set(["fc", "afc", "as", "us", "sc", "ac", "es", "cs", "js", "rc", "ol", "om", "asc", "fcs", "club", "football", "foot", "team", "equipe", "la", "le", "les", "l", "de", "du", "des", "d", "et", "the", "i", "ii", "iii", "b", "c", "u"]);
+const baseClub = s => cleClub(s).split(" ").filter(m => m && !MOTS_VIDES.has(m) && !/^\d{1,2}$/.test(m) && !/^u\d{1,2}$/.test(m)).sort().join(" ");
+
+function aliasClubs() { return ETAT.profil.aliasClubs || {}; }
+// renvoie le nom officiel d'un club si on l'a déjà fusionné
+function clubOfficiel(nom) {
+  if (!nom) return nom;
+  const a = aliasClubs()[cleClub(nom)];
+  return a || nom;
+}
+
+// paires de clubs qui ont l'air d'être le même (à proposer au joueur)
+// quel nom garder : celui du profil, puis celui sans numéro d'équipe, puis le plus utilisé
+function scoreNomClub(c) {
+  return (c === ETAT.profil.club ? 1000 : 0) + (/\s(\d{1,2}|i{1,3}|b)$/i.test(c.trim()) ? 0 : 500) + ETAT.matchs.filter(m => m.club === c).length;
+}
+function clubsSemblables() {
+  const clubs = clubsConnus(), paires = [], ignores = ETAT.profil.clubsDistincts || [];
+  for (let i = 0; i < clubs.length; i++) for (let j = i + 1; j < clubs.length; j++) {
+    const a = clubs[i], b = clubs[j];
+    if (!baseClub(a) || baseClub(a) !== baseClub(b)) continue;
+    if (ignores.includes(paireCle(a, b))) continue;
+    // on garde le nom le plus court (sans le « 2 ») comme nom principal
+    paires.push(scoreNomClub(a) >= scoreNomClub(b) ? [a, b] : [b, a]);
+  }
+  return paires;
+}
+
+function fusionnerClubs(garder, enlever) {
+  if (!garder || !enlever || garder === enlever) return 0;
+  let n = 0;
+  const r = (o, k) => { if (o && o[k] === enlever) { o[k] = garder; n++; } };
+  ETAT.matchs.forEach(m => r(m, "club"));
+  ETAT.transferts.forEach(t => { r(t, "de"); r(t, "vers"); });
+  (ETAT.trophees || []).forEach(t => r(t, "club"));
+  (ETAT.recompenses || []).forEach(x => r(x, "club"));
+  Object.values(ETAT.saisonsMeta || {}).forEach(s => r(s, "club"));
+  r(ETAT.profil, "club");
+  // un « transfert » d'un club vers lui-même n'a plus de sens
+  const avant = ETAT.transferts.length;
+  ETAT.transferts = ETAT.transferts.filter(t => !(t.de && t.de === t.vers));
+  const aliases = { ...aliasClubs() };
+  aliases[cleClub(enlever)] = garder;
+  Object.keys(aliases).forEach(k => { if (aliases[k] === enlever) aliases[k] = garder; });
+  ETAT.profil.aliasClubs = aliases;
+  noter("Modifié", `Clubs fusionnés : « ${enlever} » → « ${garder} »${avant !== ETAT.transferts.length ? " (transfert inutile retiré)" : ""}`);
+  sauver(); toutRafraichir(); rafraichirFeuilles();
+  return n;
+}
+
+function demanderFusion(garder, enlever) {
+  const nbM = ETAT.matchs.filter(m => m.club === enlever).length;
+  confirmer(`Fusionner « ${enlever} » dans « ${garder} » ? ${nbM ? `${nbM > 1 ? `Ses ${nbM} matchs` : "Son match"} et ses stats passent dans « ${garder} ».` : ""} Les prochains matchs « ${enlever} » iront aussi dans « ${garder} ».`, () => {
+    fusionnerClubs(garder, enlever);
+    toast(`✅ « ${enlever} » et « ${garder} » ne font plus qu'un club.`, 5000);
+  });
+}
+
+function feuilleFusion() {
+  const clubs = clubsConnus();
+  if (clubs.length < 2) { toast("Il faut au moins deux clubs pour en fusionner.", 4000); return; }
+  feuille("Fusionner deux clubs", corps => {
+    const sel = (lab, v) => { const s = el("select", { class: "champ" }, clubs.map(c => el("option", { value: c, text: c }))); s.value = v; return [s, el("label", { class: "ch" }, lab, s)]; };
+    const paire = clubsSemblables()[0] || [clubs[0], clubs[1]];
+    const [g, lg] = sel("Nom à garder", paire[0]);
+    const [e, le] = sel("Club à fusionner dedans (il disparaît)", paire[1]);
+    corps.append(el("p", { class: "aide", text: "Tous les matchs, buts, trophées et transferts du 2e club passent dans le 1er." }), lg, le,
+      el("div", { class: "form-actions" }, bouton("Fusionner", () => {
+        if (g.value === e.value) { toast("Choisis deux clubs différents.", 3000); return; }
+        fermerHaut(); demanderFusion(g.value, e.value);
+      }, "mini vert")));
+  });
+}
+
+// carte à afficher en haut de « Clubs et transferts »
+function carteClubsSemblables() {
+  const paires = clubsSemblables();
+  if (!paires.length) return null;
+  return carte("🔗 Même club ?", ...paires.map(([a, b]) => el("div", { class: "fusion-ligne" },
+    el("p", { style: "margin:0", text: `« ${a} » et « ${b} » ont l'air d'être le même club.` }),
+    el("div", { class: "rangee" },
+      bouton("Fusionner", () => demanderFusion(a, b), "mini vert"),
+      bouton("Ce sont 2 clubs différents", () => {
+        ETAT.profil.clubsDistincts = [...(ETAT.profil.clubsDistincts || []), paireCle(a, b)];
+        sauver(); toutRafraichir();
+      }, "lien")))));
+}
+
+// =====================================================================
+//  TOUT RECOMMENCER : efface la carrière, le profil, l'entraînement et la
+//  fiche d'équipe, comme une toute première ouverture. Une copie de secours
+//  est faite avant (restaurable dans Plus › Sauvegarde).
+// =====================================================================
+async function reinitialiserTout() {
+  const att = feuille("Réinitialisation…", corps => corps.append(el("div", { class: "capt-attente" }, el("span", { class: "capt-rond", "aria-hidden": "true" }), el("span", { text: "J'efface tout… ne ferme pas l'appli." }))), { critique: true });
+  let copie = false;
+  try { if (assets) { await creerBackup("Avant réinitialisation"); copie = true; } } catch (e) {}
+  const garde = copie ? ETAT.backups.slice() : [];
+  try {
+    clearTimeout(minuteurEcrire);
+    await fileEcriture;
+    // fiches d'équipe à moi seulement (le serveur refuse le reste)
+    if (dbNs && userId) {
+      try { await dbNs.doc("players/" + userId).delete(); } catch (e) {}
+      if (ETAT.profil.role === "COACH") { try { await dbNs.doc("teams/" + userId).delete(); } catch (e) {} }
+    }
+    if (dbCol) {
+      const ids = new Set(Object.keys(dernierEcrit));
+      try { (await dbCol.get()).docs.forEach(d => ids.add(d.id)); } catch (e) {}
+      for (const id of ids) { try { await dbCol.doc(id).delete(); } catch (e) {} }
+      dernierEcrit = {};
+    }
+    try { [CLE_LOCALE, CLE_ANCIENNE, "ambiance", "lg-niveau", "son-entrainement"].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    etatDepuis({ backups: garde });
+    sauverLocal();
+    if (dbCol && garde.length) { ecrireTout(); await fileEcriture; }
+  } catch (e) {
+    att.fermer(); toast("La réinitialisation n'a pas pu se terminer. Réessaie.", 6000); return;
+  }
+  location.reload();
+}
+
+function demanderReinitialisation() {
+  confirmer("Tout effacer ? Tes matchs, buts, passes, stats, entraînements, ton profil et ta place dans une équipe seront supprimés. L'appli redémarre comme la toute première fois.", () => {
+    confirmer(assets ? "Dernière confirmation. Une copie de secours est faite juste avant : tu pourras la récupérer dans Plus › Sauvegarde." : "Dernière confirmation : ce sera définitif.", reinitialiserTout);
+  });
+}
+
+// =====================================================================
+//  CENTRE DES MATCHS : à venir, en direct (score tenu à la main),
+//  terminés, calendrier mois / semaine, fiche complète, lieux et stades
+// =====================================================================
+const NOMS_JOURS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+// Pastille d'équipe : initiales + couleur fixe tirée du nom (pas un faux logo)
+function ecusson(nom, grand) {
+  const mots = cleClub(nom).split(" ").filter(m => m && !MOTS_VIDES.has(m) && !/^\d+$/.test(m));
+  const ini = (mots.length >= 2 ? mots[0][0] + mots[1][0] : (mots[0] || "?").slice(0, 2)).toUpperCase();
+  let h = 0; for (const c of cleClub(nom)) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return el("span", { class: "ecusson" + (grand ? " grand" : ""), style: `--h:${h}`, "aria-hidden": "true", text: ini });
+}
+const dureeMatch = m => num(m.duree) || num(ETAT.profil.dureeMatch) || 90;
+function debutMatch(m) {
+  if (!m.d) return null;
+  const t = new Date(m.d + "T" + (/^\d{2}:\d{2}/.test(m.heure || "") ? m.heure.slice(0, 5) : "00:00"));
+  return isNaN(t) ? null : t;
+}
+function enDirect(m) {
+  if (!aVenir(m)) return false;
+  if (m.direct) return true;
+  if (!m.heure) return false;
+  const d = debutMatch(m); if (!d) return false;
+  const t = Date.now();
+  return t >= d.getTime() - 5 * 60000 && t <= d.getTime() + (dureeMatch(m) + 25) * 60000;
+}
+// match passé sans score : il reste à saisir le résultat
+function scoreASaisir(m) {
+  if (!aVenir(m) || enDirect(m)) return false;
+  if ((m.d || "") < aujourdHui()) return true;
+  if (m.d === aujourdHui() && m.heure) { const d = debutMatch(m); return d && Date.now() > d.getTime() + (dureeMatch(m) + 25) * 60000; }
+  return false;
+}
+const aVenirVrai = m => aVenir(m) && !enDirect(m) && !scoreASaisir(m) && !!m.d;
+function compteARebours(m) {
+  const d = debutMatch(m); if (!d) return "";
+  const ms = d.getTime() - Date.now();
+  const jours = Math.round((dateObj(m.d) - dateObj(aujourdHui())) / 864e5);
+  if (!m.heure) return jours === 0 ? "Aujourd'hui" : jours === 1 ? "Demain" : `Dans ${jours} jours`;
+  if (ms <= 0) return "Maintenant";
+  const h = Math.floor(ms / 3600e3), mn = Math.floor((ms % 3600e3) / 60000);
+  if (h >= 48) return `Dans ${Math.floor(h / 24)} j ${h % 24} h`;
+  if (h >= 1) return `Dans ${h} h ${String(mn).padStart(2, "0")}`;
+  return `Dans ${mn} min`;
+}
+function minuteDirect(m) {
+  const debut = m.debutDirect || (debutMatch(m) && m.heure ? debutMatch(m).getTime() : null);
+  if (!debut) return null;
+  const mn = Math.floor((Date.now() - debut) / 60000) + 1;
+  return Math.max(1, Math.min(mn, dureeMatch(m) + 15));
+}
+const lieuTexte = m => [m.stade, m.ville].filter(Boolean).join(", ");
+
+// ---------- Carte d'un match à venir / en direct ----------
+function carteMatchAffiche(m, { titre } = {}) {
+  const ext = m.lieu === "ext";
+  const nous = m.club || ETAT.profil.club || "Mon équipe", eux = m.adv || "Adversaire";
+  const [g, d] = ext ? [eux, nous] : [nous, eux];
+  const direct = enDirect(m);
+  const score = direct ? `${n0(m.lbp)} – ${n0(m.lbc)}` : aVenir(m) ? (m.heure || "vs") : `${m.bp} – ${m.bc}`;
+  const scoreAff = direct && ext ? `${n0(m.lbc)} – ${n0(m.lbp)}` : !aVenir(m) && ext ? `${m.bc} – ${m.bp}` : score;
+  return el("button", { class: "carte lg affiche", type: "button", onclick: () => ficheMatch(m.id) },
+    titre ? el("span", { class: "affiche-titre", text: titre }) : "",
+    el("span", { class: "affiche-comp", text: [compLabel(m), m.tour].filter(Boolean).join(" · ") }),
+    el("span", { class: "affiche-eq" },
+      el("span", { class: "affiche-equipe" }, ecusson(g, true), el("b", { text: g })),
+      el("span", { class: "affiche-score" + (direct ? " direct" : "") }, direct ? el("span", { class: "point-direct", text: `● ${minuteDirect(m) || "–"}'` }) : "", el("b", { text: scoreAff })),
+      el("span", { class: "affiche-equipe" }, ecusson(d, true), el("b", { text: d }))),
+    el("span", { class: "affiche-infos", text: [m.d ? joli(m.d) : "Date à préciser", lieuTexte(m) || (ext ? "À l'extérieur" : "À domicile")].filter(Boolean).join(" · ") }),
+    aVenirVrai(m) ? el("span", { class: "puce compte", text: "⏳ " + compteARebours(m) }) : "",
+    !aVenir(m) ? el("span", { class: "puce " + resultat(m).toLowerCase(), text: { V: "Victoire", N: "Nul", D: "Défaite" }[resultat(m)] }) : "");
+}
+
+// ---------- Direct : score tenu à la main ----------
+function panneauDirect(m, apres) {
+  const maj = () => { sauver(); if (apres) apres(); else toutRafraichir(); rafraichirFeuilles(); };
+  const mn = () => minuteDirect(m);
+  const ajouter = (cote, d) => { const k = cote === "nous" ? "lbp" : "lbc"; m[k] = Math.max(0, n0(m[k]) + d); maj(); };
+  return el("div", { class: "carte lg direct-panneau" },
+    el("div", { class: "carte-tete" }, el("h3", { text: "🔴 Match en direct" }), el("span", { class: "puce", text: `${mn() || "–"}'` })),
+    el("p", { class: "aide", text: "Tu tiens le score toi-même pendant le match : rien n'est récupéré automatiquement." }),
+    el("div", { class: "direct-score" },
+      el("div", {}, el("b", { text: m.club || "Nous" }), el("span", { class: "gros-chiffre", text: String(n0(m.lbp)) }),
+        el("div", { class: "rangee" }, bouton("−", () => ajouter("nous", -1), "mini gris"), bouton("＋1", () => ajouter("nous", 1), "mini vert"))),
+      el("div", {}, el("b", { text: m.adv || "Eux" }), el("span", { class: "gros-chiffre", text: String(n0(m.lbc)) }),
+        el("div", { class: "rangee" }, bouton("−", () => ajouter("eux", -1), "mini gris"), bouton("＋1", () => ajouter("eux", 1), "mini")))),
+    el("div", { class: "rangee" },
+      bouton("⚽ J'ai marqué", () => { const b = { id: uid(), matchId: m.id }; const x = mn(); if (x) b.min = x; const avant = ETAT.buts.filter(y => !y.csc).length; ETAT.buts.push(b); m.lbp = n0(m.lbp) + 1; noter("Ajouté", "But (direct)"); maj(); verifierDizaine(avant); toast("⚽ But ajouté !"); }, "mini vert"),
+      bouton("🎯 Ma passe déc.", () => { const p = { id: uid(), matchId: m.id, derniere: true }; const x = mn(); if (x) p.min = x; ETAT.passes.push(p); m.lbp = n0(m.lbp) + 1; noter("Ajouté", "Passe décisive (direct)"); maj(); toast("🎯 Passe ajoutée !"); }, "mini")),
+    el("div", { class: "form-actions" },
+      bouton("Annuler le direct", () => confirmer("Arrêter le direct sans enregistrer le score ?", () => { delete m.direct; delete m.lbp; delete m.lbc; delete m.debutDirect; maj(); }), "lien"),
+      bouton("🏁 Terminer le match", () => confirmer(`Score final : ${m.club || "Nous"} ${n0(m.lbp)} – ${n0(m.lbc)} ${m.adv || "Eux"} ?`, () => {
+        m.bp = n0(m.lbp); m.bc = n0(m.lbc); delete m.direct; delete m.lbp; delete m.lbc; delete m.debutDirect;
+        noter("Modifié", `Résultat ${matchLabel(m)}`); maj();
+        if (m.bp > m.bc) feter("Victoire ! 🎉", `${m.bp} – ${m.bc} contre ${m.adv || "l'adversaire"}`);
+      }), "mini vert")));
+}
+function demarrerDirect(m) {
+  m.direct = true; m.lbp = 0; m.lbc = 0; m.debutDirect = Date.now();
+  sauver(); toutRafraichir(); rafraichirFeuilles();
+}
+// le chrono du direct se met à jour toutes les 30 s, seulement quand il est à l'écran
+let minuteurDirect = 0;
+function surveillerDirect() {
+  clearInterval(minuteurDirect);
+  minuteurDirect = setInterval(() => {
+    if (document.hidden) return;
+    const visible = (vueCourante === "matchs" && ongletMatchs === "direct") || (vueCourante === "accueil" && ETAT.matchs.some(enDirect));
+    if (!visible) { clearInterval(minuteurDirect); minuteurDirect = 0; return; }
+    if (!pile.length) rendreVue();
+  }, 30000);
+}
+
+// ---------- Page Matchs ----------
+let ongletMatchs = "avenir", calVue = "mois", calDecal = 0, calJour = null;
+function rendreMatchs() {
+  const v = $("v-matchs"); v.textContent = "";
+  v.append(el("header", { class: "top" }, el("h1", { text: "Mes matchs 🏟️" }), el("div", { class: "rangee-btn" },
+    el("button", { class: "mini gris", type: "button", "aria-label": "Importer une capture d'écran", title: "Importer une capture", onclick: () => lancerImportCapture() }, "📸"),
+    bouton("＋ Match", () => editerMatch(null), "mini vert"))));
+  const direct = ETAT.matchs.filter(enDirect);
+  const avenir = matchsTries(false).filter(aVenirVrai);
+  if (ongletMatchs === "direct" && !direct.length) ongletMatchs = "avenir";
+  v.append(el("div", { class: "filtres segm", role: "tablist", "aria-label": "Matchs" },
+    [["avenir", `À venir${avenir.length ? ` (${avenir.length})` : ""}`], ...(direct.length ? [["direct", `🔴 En direct (${direct.length})`]] : []), ["termines", "Terminés"], ["calendrier", "📅 Calendrier"]]
+      .map(([k, l]) => el("button", { class: "chip", type: "button", role: "tab", "aria-selected": String(ongletMatchs === k), "aria-pressed": String(ongletMatchs === k), onclick: () => { ongletMatchs = k; rendreMatchs(); } }, l))));
+  if (direct.length && ongletMatchs !== "direct") v.append(el("button", { class: "carte lg bandeau-direct", type: "button", onclick: () => { ongletMatchs = "direct"; rendreMatchs(); } }, el("b", { text: `🔴 ${direct.length > 1 ? direct.length + " matchs" : "Un match"} en direct` }), el("span", { class: "muted petit", text: direct.map(m => `vs ${m.adv || "?"} ${n0(m.lbp)}-${n0(m.lbc)}`).join(" · ") })));
+  if (ongletMatchs === "direct") {
+    direct.forEach(m => { v.append(carteMatchAffiche(m)); v.append(panneauDirect(m)); });
+    surveillerDirect();
+  } else if (ongletMatchs === "avenir") {
+    if (!avenir.length) v.append(carte(null, el("p", { class: "vide", text: "Aucun match à venir. Ajoute un match sans score (avec la date et l'heure) : il apparaîtra ici avec un compte à rebours." }), bouton("＋ Ajouter un match à venir", () => editerMatch(null), "mini vert")));
+    avenir.forEach((m, i) => {
+      v.append(carteMatchAffiche(m, { titre: i === 0 ? "PROCHAIN MATCH" : null }));
+      if (m.d === aujourdHui()) v.append(el("div", { class: "rangee", style: "justify-content:center;margin-top:-6px" }, bouton("🔴 Démarrer le direct", () => { demarrerDirect(m); ongletMatchs = "direct"; rendreMatchs(); }, "mini rouge")));
+    });
+  } else if (ongletMatchs === "calendrier") rendreCalendrierMatchs(v);
+  else rendreMatchsTermines(v);
+}
+function rendreMatchsTermines(v) {
+  const saisir = matchsTries().filter(scoreASaisir);
+  if (saisir.length) v.append(carte("✏️ Score à saisir", el("p", { class: "aide", text: "Ces matchs sont passés mais n'ont pas encore de score." }), el("ul", { class: "liste" }, saisir.map(m => el("li", {}, el("button", { class: "item", type: "button", onclick: () => editerMatch(m) },
+    ecusson(m.adv || "?"), el("span", { class: "i-txt" }, el("b", { text: `${m.lieu === "ext" ? "à" : "vs"} ${m.adv || "Adversaire"}` }), el("span", { text: [court(m.d), compLabel(m)].filter(Boolean).join(" · ") })), el("span", { class: "score", text: "Saisir" })))))));
+  const saisons = saisonsConnues();
+  v.append(el("div", { class: "duo" },
+    selectFiltre("fmS", "Saison", [["", "Toutes les saisons"], ...saisons.map(s => [s, fmtSaison(s)])], filtreMatchs.saison, x => { filtreMatchs.saison = x; rendreMatchs(); }),
+    selectFiltre("fmC", "Compétition", [["", "Toutes les compétitions"], ...COMPS], filtreMatchs.comp, x => { filtreMatchs.comp = x; rendreMatchs(); })));
+  const ms = matchsTries().filter(m => !aVenir(m) && matchOk(m, filtreMatchs));
+  if (!ms.length) {
+    v.append(carte(null, el("p", { class: "vide", text: ETAT.matchs.length ? "Aucun match terminé avec ces filtres." : "Aucun match pour l'instant. Ajoute ton premier match : tes buts, passes et minutes seront ensuite comptés automatiquement partout." }),
+      el("div", { class: "rangee" }, bouton("＋ Ajouter un match", () => editerMatch(null), "mini vert"), bouton("📸 Importer une capture", () => lancerImportCapture(), "mini gris"))));
+    return;
+  }
+  const parSaison = {};
+  ms.forEach(m => { const s = saisonMatch(m); (parSaison[s] = parSaison[s] || []).push(m); });
+  Object.keys(parSaison).sort().reverse().forEach(s => {
+    const st = calculer({ ...filtreMatchs, saison: s });
+    v.append(carte(el("div", { class: "carte-tete" }, el("h2", { text: `Saison ${fmtSaison(s)}` }), el("span", { class: "puce", text: `${st.v}V ${st.n}N ${st.d}D · ⚽ ${st.nbButs}` })),
+      el("ul", { class: "liste" }, parSaison[s].map(itemMatch))));
+  });
+}
+
+// ---------- Calendrier des matchs ----------
+const isoDe = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function rendreCalendrierMatchs(v) {
+  const parJour = {};
+  ETAT.matchs.forEach(m => { if (m.d) (parJour[m.d] = parJour[m.d] || []).push(m); });
+  const auj = dateObj(aujourdHui());
+  let debut, fin, titre;
+  if (calVue === "mois") {
+    const m0 = new Date(auj.getFullYear(), auj.getMonth() + calDecal, 1);
+    titre = m0.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    debut = new Date(m0); debut.setDate(1 - ((m0.getDay() + 6) % 7));
+    const dernier = new Date(m0.getFullYear(), m0.getMonth() + 1, 0);
+    fin = new Date(dernier); fin.setDate(dernier.getDate() + (6 - ((dernier.getDay() + 6) % 7)));
+  } else {
+    debut = new Date(auj); debut.setDate(auj.getDate() - ((auj.getDay() + 6) % 7) + 7 * calDecal);
+    fin = new Date(debut); fin.setDate(debut.getDate() + 6);
+    titre = `${debut.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} – ${fin.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`;
+  }
+  const re = () => rendreMatchs();
+  v.append(el("div", { class: "cal-barre" },
+    el("button", { class: "rond lg petit-rond", type: "button", "aria-label": calVue === "mois" ? "Mois précédent" : "Semaine précédente", onclick: () => { calDecal--; re(); } }, "‹"),
+    el("button", { class: "capsule lg cap", type: "button", onclick: () => { calDecal = 0; re(); } }, titre),
+    el("button", { class: "rond lg petit-rond", type: "button", "aria-label": calVue === "mois" ? "Mois suivant" : "Semaine suivante", onclick: () => { calDecal++; re(); } }, "›")));
+  v.append(el("div", { class: "filtres", style: "justify-content:center" }, [["mois", "Mois"], ["semaine", "Semaine"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(calVue === k), onclick: () => { calVue = k; calDecal = 0; re(); } }, l))));
+  const puceMatch = m => enDirect(m) ? "direct" : aVenir(m) ? "avenir" : resultat(m).toLowerCase();
+  if (calVue === "mois") {
+    const grille = el("div", { class: "cal-mois", role: "grid", "aria-label": titre });
+    NOMS_JOURS.forEach(j => grille.append(el("span", { class: "cal-nom", text: j })));
+    const moisRef = new Date(auj.getFullYear(), auj.getMonth() + calDecal, 1).getMonth();
+    for (const d = new Date(debut); d <= fin; d.setDate(d.getDate() + 1)) {
+      const iso = isoDe(d), ms = parJour[iso] || [];
+      grille.append(el("button", { class: "cal-case" + (d.getMonth() !== moisRef ? " hors" : "") + (iso === aujourdHui() ? " auj" : "") + (iso === calJour ? " choisi" : ""), type: "button", "aria-label": `${d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}${ms.length ? ` : ${pluriel(ms.length, "match")}` : ""}`, onclick: () => { calJour = calJour === iso ? null : iso; re(); } },
+        el("span", { text: String(d.getDate()) }), ms.length ? el("span", { class: "cal-points" }, ms.slice(0, 3).map(m => el("i", { class: puceMatch(m) }))) : ""));
+    }
+    v.append(el("div", { class: "carte lg" }, grille,
+      el("div", { class: "cal-legende" }, [["v", "Victoire"], ["n", "Nul"], ["d", "Défaite"], ["avenir", "À venir"]].map(([k, l]) => el("span", {}, el("i", { class: k }), l)))));
+    const jour = calJour && parJour[calJour];
+    if (calJour) v.append(carte(joli(calJour), jour ? el("ul", { class: "liste" }, jour.map(itemMatch)) : el("p", { class: "vide", text: "Pas de match ce jour-là." }), bouton("＋ Match ce jour-là", () => { editerMatch(null); setTimeout(() => { const i = document.querySelector('.feuille:last-child input[type="date"]'); if (i) i.value = calJour; }, 50); }, "mini gris")));
+  } else {
+    const box = el("div", { class: "carte lg" });
+    for (const d = new Date(debut); d <= fin; d.setDate(d.getDate() + 1)) {
+      const iso = isoDe(d), ms = parJour[iso] || [];
+      box.append(el("div", { class: "cal-ligne" + (iso === aujourdHui() ? " auj" : "") },
+        el("span", { class: "calm-date cap", text: d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }) }),
+        ms.length ? el("ul", { class: "liste" }, ms.map(itemMatch)) : el("span", { class: "muted petit", text: "—" })));
+    }
+    v.append(box);
+  }
+  v.append(el("p", { class: "aide", text: "Les entraînements et événements de l'équipe sont dans Équipe › Calendrier." }));
+}
+
+// ---------- Fiche du match : direct, lieu, feuille, chronologie ----------
+function ficheMatchHaut(corps, m) {
+  if (enDirect(m)) corps.append(panneauDirect(m, () => { toutRafraichir(); }));
+  else if (aVenir(m) && m.d === aujourdHui()) corps.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("🔴 Démarrer le direct", () => demarrerDirect(m), "mini rouge")));
+  else if (aVenirVrai(m)) corps.append(el("p", { class: "aide", style: "text-align:center", text: "⏳ " + compteARebours(m) }));
+}
+function liensCarte(m) {
+  const q = [m.stade, m.adresse, m.ville].filter(Boolean).join(", ");
+  if (!q) return null;
+  const e = encodeURIComponent(q);
+  return el("div", { class: "rangee" },
+    el("a", { class: "mini gris", href: `https://maps.apple.com/?q=${e}`, target: "_blank", rel: "noopener" }, "🗺️ Plans"),
+    el("a", { class: "mini gris", href: `https://maps.apple.com/?daddr=${e}`, target: "_blank", rel: "noopener" }, "🧭 Itinéraire"),
+    el("a", { class: "mini gris", href: `https://www.google.com/maps/dir/?api=1&destination=${e}`, target: "_blank", rel: "noopener" }, "Google Maps"));
+}
+// « 12' Lucas (passe Adam) » → { min: 12, txt: "Lucas", passe: "Adam" }
+function lignesEvenements(txt) {
+  return String(txt || "").split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const r = /^(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]?\s*(.*)$/.exec(l);
+    const min = r ? +r[1] + (r[2] ? +r[2] / 100 : 0) : null;
+    let reste = r ? r[3] : l;
+    const p = /\(\s*(?:passe|p\.?|pd)\s*:?\s*([^)]+)\)/i.exec(reste);
+    if (p) reste = reste.replace(p[0], "").trim();
+    return { min, minTxt: r ? r[1] + (r[2] ? "+" + r[2] : "") + "'" : "", txt: reste, passe: p ? p[1].trim() : "" };
+  });
+}
+const estMoi = nom => { const p = ETAT.profil; const k = cleClub(nom); return !!k && [p.prenom, nomJoueur(), p.surnom].filter(Boolean).some(x => cleClub(x) === k); };
+function chronologie(m) {
+  const ev = [];
+  const moi = ETAT.profil.prenom || "Moi";
+  const mesButs = ETAT.buts.filter(b => b.matchId === m.id);
+  mesButs.forEach(b => ev.push({ min: num(b.min), ico: b.csc ? "↩️" : "⚽", txt: b.csc ? "But contre son camp" : `But de ${moi}${b.pen ? " (penalty)" : b.cf ? " (coup franc)" : ""}${b.passeur ? ` · passe de ${b.passeur}` : ""}`, moi: true }));
+  passesDuMatch(m).forEach(p => ev.push({ min: num(p.min), ico: "🎯", txt: `Passe décisive de ${moi}${p.buteur ? ` pour ${p.buteur}` : ""}`, moi: true }));
+  lignesEvenements(m.buteurs).forEach(x => { if (estMoi(x.txt) && mesButs.length) return; ev.push({ min: x.min, ico: "⚽", txt: `But de ${x.txt}${x.passe ? ` · passe de ${x.passe}` : ""}` }); });
+  lignesEvenements(m.cartons).forEach(x => ev.push({ min: x.min, ico: /🟥|rouge/i.test(x.txt) ? "🟥" : "🟨", txt: x.txt.replace(/🟨|🟥/g, "").trim() || "Carton" }));
+  lignesEvenements(m.remplacements).forEach(x => ev.push({ min: x.min, ico: "🔁", txt: x.txt }));
+  if (m.statut === "rem" && num(m.entree) != null) ev.push({ min: +m.entree, ico: "↗️", txt: `${moi} entre en jeu`, moi: true });
+  if (num(m.sortie) != null) ev.push({ min: +m.sortie, ico: "↘️", txt: `${moi} sort`, moi: true });
+  ETAT.penRates.filter(p => p.matchId === m.id).forEach(p => ev.push({ min: num(p.min), ico: "❌", txt: `Penalty raté (${moi})`, moi: true }));
+  return ev.sort((a, b) => (a.min == null) - (b.min == null) || (a.min || 0) - (b.min || 0));
+}
+function ficheMatchBas(corps, m) {
+  const ev = chronologie(m);
+  if (ev.length) corps.append(el("div", { class: "carte lg" }, el("h3", { text: "🕒 Chronologie" }),
+    el("ol", { class: "chrono" }, ev.map(e => el("li", { class: e.moi ? "moi" : "" }, el("span", { class: "chrono-min", text: e.min != null ? `${Math.floor(e.min)}'` : "–" }), el("span", { text: `${e.ico} ${e.txt}` }))))));
+  const tit = String(m.titulaires || "").split("\n").map(x => x.trim()).filter(Boolean), rem = String(m.remplacants || "").split("\n").map(x => x.trim()).filter(Boolean);
+  if (tit.length || rem.length) corps.append(el("div", { class: "carte lg" }, el("h3", { text: "📋 Composition de mon équipe" }),
+    el("div", { class: "duo compo" },
+      el("div", {}, el("p", { class: "label-mini", text: `Titulaires (${tit.length})` }), el("ul", { class: "compo-liste" }, tit.map(n => el("li", { class: estMoi(n.replace(/^\d+\s*/, "")) ? "moi" : "", text: n })))),
+      el("div", {}, el("p", { class: "label-mini", text: `Remplaçants (${rem.length})` }), el("ul", { class: "compo-liste" }, rem.map(n => el("li", { class: estMoi(n.replace(/^\d+\s*/, "")) ? "moi" : "", text: n })))))));
+  const stEq = [["Possession", m.possession != null ? m.possession + " %" : null], ["Tirs", m.tirsEq], ["Tirs cadrés", m.tirsCadresEq], ["Tirs adverses", m.tirsAdv], ["Corners", m.corners], ["Fautes", m.fautes]].filter(x => x[1] != null && x[1] !== "");
+  if (stEq.length) corps.append(el("div", { class: "carte lg" }, el("h3", { text: "📊 Statistiques de l'équipe" }), grilleStats(stEq)));
+  if (m.mdm || m.resume) corps.append(el("div", { class: "carte lg" },
+    m.mdm ? el("p", { style: "margin:0", text: `🏅 Meilleur joueur : ${m.mdm}` }) : "",
+    m.resume ? el("p", { style: "margin:0;white-space:pre-wrap", text: m.resume }) : ""));
+  const terrain = TERRAINS.find(t => t[0] === m.terrain && t[0])?.[1];
+  if (m.stade || m.adresse || m.ville || terrain) corps.append(el("div", { class: "carte lg" }, el("h3", { text: "📍 Lieu du match" }),
+    el("p", { style: "margin:0", text: [m.stade, m.adresse, m.ville].filter(Boolean).join(" · ") }),
+    el("p", { class: "aide", style: "margin:0", text: [LIEUX.find(l => l[0] === m.lieu)?.[1], terrain ? "Terrain : " + terrain : null].filter(Boolean).join(" · ") }),
+    liensCarte(m) || ""));
+}
+
+// ---------- Lieux et stades ----------
+SECTIONS.lieux = v => {
+  v.append(el("header", { class: "top" }, el("h1", { text: "Lieux et stades 📍" })));
+  const lieux = {};
+  ETAT.matchs.forEach(m => { const k = cleClub([m.stade, m.ville, m.adresse].filter(Boolean).join(" ")); if (!k) return; (lieux[k] = lieux[k] || { m, ms: [] }).ms.push(m); });
+  const liste = Object.values(lieux).sort((a, b) => b.ms.length - a.ms.length);
+  if (!liste.length) { v.append(carte(null, el("p", { class: "vide", text: "Aucun lieu pour l'instant. Ajoute le stade, la ville ou l'adresse dans un match (rubrique « 📍 Stade et adresse ») : il apparaîtra ici avec un lien vers Plans." }))); return; }
+  liste.forEach(({ m, ms }) => {
+    const st = { v: 0, n: 0, d: 0 }; ms.forEach(x => { const r = resultat(x); if (r) st[r.toLowerCase()]++; });
+    const terrain = TERRAINS.find(t => t[0] === m.terrain && t[0])?.[1];
+    v.append(carte(m.stade || m.ville || "Lieu",
+      el("p", { class: "aide", style: "margin:0", text: [m.adresse, m.ville, terrain ? "Terrain : " + terrain : null].filter(Boolean).join(" · ") || "Adresse non renseignée" }),
+      el("p", { style: "margin:0", text: `${pluriel(ms.length, "match")} · ${st.v}V ${st.n}N ${st.d}D · ${ms.some(x => x.lieu === "ext") ? "extérieur" : "domicile"}` }),
+      liensCarte(m) || ""));
+  });
+};
+
+// =====================================================================
+//  COMPÉTITIONS : championnat (classement automatique, domicile /
+//  extérieur, attaque / défense, évolution, règles), coupes (parcours,
+//  poules, tableau), toutes mes compétitions
+// =====================================================================
+const COMPS_COUPE = new Set(["coupeNat", "coupeLigue", "coupeReg", "ldc", "europa", "conf", "superc", "tournoi", "cdm", "euro", "copa", "can", "inter"]);
+const REGLES_DEF = { v: 3, n: 1, d: 0 };
+const reglesLigue = () => ({ ...REGLES_DEF, ...((ETAT.ligue && ETAT.ligue.regles) || {}) });
+// date du classement importé : seuls les matchs après cette date s'ajoutent
+const dateBaseLigue = () => (ETAT.ligue && (ETAT.ligue.baseDate || (ETAT.ligue.importId === "u15-u14-2-2026-10-26" ? "2026-10-26" : ""))) || "";
+function equipeDeLigue(nom) {
+  const L = ETAT.ligue; if (!L || !nom) return null;
+  return L.equipes.find(e => cleClub(e) === cleClub(nom)) || L.equipes.find(e => baseClub(e) && baseClub(e) === baseClub(nom)) || null;
+}
+// matchs de la ligue + mes matchs de championnat contre une équipe de la ligue (ajoutés tout seuls)
+function matchsLigue() {
+  const L = ETAT.ligue; if (!L) return [];
+  const out = L.matchs.map(m => ({ ...m, source: "ligue" }));
+  if (L.auto === false) return out;
+  const depuis = dateBaseLigue();
+  ETAT.matchs.forEach(m => {
+    if (m.comp !== "champ" || aVenir(m) || estSelection(m) || !m.d) return;
+    if (depuis && m.d <= depuis) return;
+    const adv = equipeDeLigue(m.adv); if (!adv || adv === L.moi) return;
+    if (L.matchs.some(x => x.d === m.d && [x.a, x.b].includes(adv) && [x.a, x.b].includes(L.moi))) return;
+    const dom = m.lieu !== "ext";
+    out.push({ id: "m-" + m.id, a: dom ? L.moi : adv, b: dom ? adv : L.moi, sa: dom ? +m.bp : +m.bc, sb: dom ? +m.bc : +m.bp, d: m.d, source: "moi", matchId: m.id });
+  });
+  return out;
+}
+function classementLigue(mode = "general", jusqua = null) {
+  const L = ETAT.ligue, R = reglesLigue(), t = {};
+  L.equipes.forEach(n => { const b = mode === "general" ? (L.base || {})[n] || {} : {}; t[n] = { n, j: +b.j || 0, g: 0, nu: 0, p: 0, bp: 0, bc: 0, bd: +b.diff || 0, pts: +b.pts || 0 }; });
+  const res = (X, pour, contre) => { X.j++; X.bp += pour; X.bc += contre; if (pour > contre) { X.g++; X.pts += R.v; } else if (pour < contre) { X.p++; X.pts += R.d; } else { X.nu++; X.pts += R.n; } };
+  matchsLigue().forEach(m => {
+    if (jusqua && (m.d || "") > jusqua) return;
+    const A = t[m.a], B = t[m.b]; if (!A || !B) return;
+    if (mode !== "ext") res(A, m.sa, m.sb);
+    if (mode !== "dom") res(B, m.sb, m.sa);
+  });
+  const dif = e => e.bp - e.bc + e.bd;
+  return Object.values(t).sort((x, y) => y.pts - x.pts || dif(y) - dif(x) || y.bp - x.bp || x.n.localeCompare(y.n, "fr"));
+}
+// l'ancien écran « Ma ligue » utilise le même calcul
+function classement() { return classementLigue("general"); }
+
+// ---------- Favoris ----------
+function favoris() { const f = ETAT.profil.favoris || {}; return { clubs: f.clubs || [], comps: f.comps || [], joueurs: f.joueurs || [] }; }
+const estFavori = (type, k) => favoris()[type].includes(k);
+function basculerFavori(type, k, nom) {
+  const f = favoris();
+  f[type] = f[type].includes(k) ? f[type].filter(x => x !== k) : [...f[type], k];
+  ETAT.profil.favoris = f; sauver();
+  toast(f[type].includes(k) ? `⭐ ${nom || k} ajouté aux favoris` : `${nom || k} retiré des favoris`);
+  toutRafraichir();
+}
+const boutonFavori = (type, k, nom) => el("button", { class: "etoile" + (estFavori(type, k) ? " on" : ""), type: "button", "aria-pressed": String(estFavori(type, k)), "aria-label": (estFavori(type, k) ? "Retirer des favoris : " : "Ajouter aux favoris : ") + (nom || k), onclick: e => { e.stopPropagation(); basculerFavori(type, k, nom); } }, estFavori(type, k) ? "★" : "☆");
+
+// ---------- Page Compétitions ----------
+let ongletComp = "champ", modeClassement = "general";
+function rendreCompetitions(v) {
+  v.textContent = "";
+  v.append(el("header", { class: "top" }, el("h1", { text: "Compétitions 🏆" })));
+  v.append(el("div", { class: "filtres segm", role: "tablist", "aria-label": "Compétitions" }, [["champ", "Championnat"], ["coupes", "Coupes"], ["toutes", "Toutes"]].map(([k, l]) => el("button", { class: "chip", type: "button", role: "tab", "aria-selected": String(ongletComp === k), "aria-pressed": String(ongletComp === k), onclick: () => { ongletComp = k; rendreCompetitions(v); } }, l))));
+  if (ongletComp === "champ") blocChampionnat(v);
+  else if (ongletComp === "coupes") blocCoupes(v);
+  else blocToutesCompets(v);
+  v.append(el("p", { class: "aide", text: "Pas de connexion à myFFF ni à la FFF : les classements viennent de ce que tu enregistres (tes matchs, ta ligue, tes captures)." }));
+}
+
+function blocChampionnat(v) {
+  const L = ETAT.ligue;
+  if (!L) {
+    v.append(carte("📊 Mon championnat", el("p", { class: "vide", text: "Crée ta ligue avec les équipes de ta poule : le classement se calcule ensuite tout seul à chaque résultat." }), bouton("＋ Créer mon championnat", () => { allerVue("ligue"); setTimeout(() => $("ligueCreer") && !$("ligueCreer").hidden && $("ligueCreer").click(), 300); }, "mini vert")));
+    return;
+  }
+  const re = () => rendreVue();
+  const rangs = classementLigue(modeClassement === "dom" || modeClassement === "ext" ? modeClassement : "general");
+  const general = classementLigue("general");
+  const dates = [...new Set(matchsLigue().map(m => m.d).filter(Boolean))].sort();
+  const avant = dates.length >= 1 ? classementLigue("general", dates.length >= 2 ? dates[dates.length - 2] : (dateBaseLigue() || "0000")) : null;
+  const rangAvant = n => { if (!avant) return null; const i = avant.findIndex(e => e.n === n); return i < 0 ? null : i; };
+  const ma = general.findIndex(e => e.n === L.moi), moi = general[ma];
+  const journee = Math.max(0, ...general.map(e => e.j));
+  v.append(el("section", { class: "carte lg" },
+    el("div", { class: "carte-tete" }, el("div", {}, el("h2", { text: L.nom }), el("span", { class: "muted petit", text: [fmtSaison(saisonActuelle()), journee ? `Journée ${journee}` : null, pluriel(L.equipes.length, "équipe")].filter(Boolean).join(" · ") })), boutonFavori("comps", "ligue", L.nom)),
+    moi ? el("div", { class: "ma-place" }, ecusson(L.moi, true), el("div", {}, el("b", { text: `${ma === 0 ? "1er 🥇" : ma + 1 + "e"} sur ${general.length}` }), el("span", { class: "muted petit", text: `${L.moi} · ${pluriel(moi.pts, "point")} · ${moi.g}V ${moi.nu}N ${moi.p}D` }))) : "",
+    el("div", { class: "filtres", role: "group", "aria-label": "Type de classement" }, [["general", "Général"], ["dom", "Domicile"], ["ext", "Extérieur"], ["attaque", "Attaque"], ["defense", "Défense"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(modeClassement === k), onclick: () => { modeClassement = k; re(); } }, l))),
+    tableClassement(modeClassement === "attaque" ? [...general].sort((a, b) => b.bp - a.bp) : modeClassement === "defense" ? [...general].sort((a, b) => a.bc - b.bc) : rangs, L, modeClassement === "general" ? rangAvant : null, !!L.base && modeClassement === "general"),
+    L.base && modeClassement === "general" ? el("p", { class: "aide", text: "Le classement importé ne donne que les points, les matchs joués et la différence de buts : les victoires, nuls et buts détaillés sont dans les autres onglets (matchs enregistrés)." }) : "",
+    L.base && modeClassement !== "general" ? el("p", { class: "aide", text: `Le classement importé ne détaille pas domicile / extérieur ni les buts : ici ne comptent que les matchs enregistrés depuis le ${court(dateBaseLigue()) || "début"}.` }) : "",
+    el("p", { class: "aide", text: `Victoire ${reglesLigue().v} pts · nul ${reglesLigue().n} · défaite ${reglesLigue().d}. En cas d'égalité : différence de buts, puis buts marqués.` }),
+    el("div", { class: "rangee" }, bouton("＋ Résultat", () => { allerVue("ligue"); setTimeout(() => $("ajoutMatch") && $("ajoutMatch").click(), 300); }, "mini vert"), bouton("⚙️ Règles", feuilleRegles, "mini gris"), bouton("✏️ Équipes", () => { allerVue("ligue"); setTimeout(() => $("ligueReglages") && $("ligueReglages").click(), 300); }, "mini gris"))));
+  // évolution de mon équipe journée après journée
+  if (dates.length >= 2 && ma >= 0) {
+    const pts = dates.map(d => ({ d, r: classementLigue("general", d).findIndex(e => e.n === L.moi) + 1 }));
+    v.append(carte("📈 Évolution de " + L.moi, graphLignes(pts.map(p => court(p.d)), [{ nom: "Place", valeurs: pts.map(p => p.r), inverse: true, max: L.equipes.length }], { suffixe: "e", entier: true }),
+      el("p", { class: "aide", text: "Place au classement après chaque journée enregistrée (1 = premier)." })));
+  }
+  const auto = matchsLigue().filter(m => m.source === "moi");
+  if (auto.length) v.append(el("p", { class: "aide", text: `✅ ${pluriel(auto.length, "de tes matchs de championnat", "de tes matchs de championnat")} ${auto.length > 1 ? "sont comptés" : "est compté"} automatiquement dans ce classement.` }));
+  // buteurs et passeurs de mon équipe (d'après mes feuilles de match)
+  blocButeurs(v, ETAT.matchs.filter(m => m.comp === "champ" && !aVenir(m)), "championnat");
+}
+function tableClassement(rangs, L, rangAvant, court) {
+  const t = el("table", {}, el("thead", {}, el("tr", {}, (court ? ["#", "", "Équipe", "J", "Diff", "Pts"] : ["#", "", "Équipe", "J", "G", "N", "P", "BP", "BC", "Diff", "Pts"]).map(h => el("th", { text: h })))));
+  const tb = el("tbody");
+  rangs.forEach((e, i) => {
+    const av = rangAvant ? rangAvant(e.n) : null;
+    const fl = av == null || av === i ? "" : av > i ? "▲" : "▼";
+    const d = e.bp - e.bc + e.bd;
+    tb.append(el("tr", { class: e.n === L.moi ? "moi" : "" },
+      el("td", { text: String(i + 1) }), el("td", { class: "evo " + (fl === "▲" ? "monte" : fl === "▼" ? "baisse" : ""), "aria-label": fl === "▲" ? "En progression" : fl === "▼" ? "En recul" : "", text: fl }),
+      el("td", { class: "eq" }, ecusson(e.n), " ", e.n), el("td", { text: String(e.j) }),
+      ...(court ? [] : [el("td", { text: String(e.g) }), el("td", { text: String(e.nu) }), el("td", { text: String(e.p) }), el("td", { text: String(e.bp) }), el("td", { text: String(e.bc) })]),
+      el("td", { text: (d > 0 ? "+" : "") + d }), el("td", { class: "pts", text: String(e.pts) })));
+  });
+  t.append(tb);
+  return el("div", { class: "tableau" }, t);
+}
+function feuilleRegles() {
+  const R = reglesLigue();
+  feuille("Règles du classement", corps => {
+    formulaire(corps, [{ champs: [
+      [{ k: "v", l: "Points pour une victoire", t: "number", min: 0, max: 10 }, { k: "n", l: "Points pour un nul", t: "number", min: 0, max: 10 }],
+      { k: "d", l: "Points pour une défaite (souvent 0, parfois 1 chez les jeunes)", t: "number", min: -2, max: 10 },
+      { k: "auto", l: "Ajouter automatiquement mes matchs de championnat", t: "check" }
+    ] }], { ...R, auto: ETAT.ligue.auto !== false }, { onSave: o => {
+      ETAT.ligue.regles = { v: num(o.v) ?? 3, n: num(o.n) ?? 1, d: num(o.d) ?? 0 };
+      ETAT.ligue.auto = !!o.auto;
+      noter("Modifié", "Règles du classement"); sauver(); fermerHaut(); toutRafraichir();
+    } });
+  });
+}
+function blocButeurs(v, matchs, quoi) {
+  const buts = {}, passes = {};
+  let lignes = 0;
+  matchs.forEach(m => lignesEvenements(m.buteurs).forEach(x => {
+    if (!x.txt) return; lignes++;
+    if (!estMoi(x.txt)) buts[x.txt] = (buts[x.txt] || 0) + 1;
+    if (x.passe && !estMoi(x.passe)) passes[x.passe] = (passes[x.passe] || 0) + 1;
+  }));
+  const moi = nomJoueur() || ETAT.profil.prenom || "Moi";
+  const mesB = matchs.reduce((s, m) => s + butsDuMatch(m).length, 0), mesP = matchs.reduce((s, m) => s + passesDuMatch(m).length, 0);
+  if (!lignes) {
+    v.append(carte("👟 Buteurs et passeurs", el("p", { style: "margin:0", text: `Toi : ⚽ ${mesB} · 🎯 ${mesP} en ${quoi}.` }),
+      el("p", { class: "aide", text: "Pour un classement des buteurs de ton équipe, remplis « Buteurs de mon équipe » dans la feuille de match (ex. « 12' Lucas (passe Adam) »). Les buteurs des autres équipes ne sont pas disponibles." })));
+    return;
+  }
+  if (mesB) buts[moi] = mesB; if (mesP) passes[moi] = mesP;
+  const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const liste = (o, ico) => el("ol", { class: "top-liste" }, top(o).map(([n, x]) => el("li", { class: n === moi ? "moi" : "" }, el("span", { text: n }), el("b", { text: `${ico} ${x}` }))));
+  v.append(carte("👟 Buteurs de mon équipe", liste(buts, "⚽"), el("p", { class: "aide", text: `D'après tes feuilles de match (${quoi}).` })));
+  if (Object.keys(passes).length) v.append(carte("🎯 Passeurs de mon équipe", liste(passes, "🎯")));
+}
+
+// ---------- Coupes ----------
+const ordreTour = t => { const i = TOURS.indexOf(t || ""); return i < 0 ? 99 : i; };
+function cleCompet(m) { return `${m.comp}|${cleClub(m.compNom || "")}|${saisonMatch(m)}`; }
+function groupesCompets(filtre) {
+  const g = {};
+  ETAT.matchs.filter(m => !estSelection(m) || COMPS_COUPE.has(m.comp)).filter(filtre).forEach(m => { const k = cleCompet(m); (g[k] = g[k] || { k, comp: m.comp, nom: m.compNom || NOM_COMP[m.comp] || "Compétition", saison: saisonMatch(m), ms: [] }).ms.push(m); });
+  return Object.values(g).sort((a, b) => (b.saison || "").localeCompare(a.saison || "") || a.nom.localeCompare(b.nom, "fr"));
+}
+function blocCoupes(v) {
+  const groupes = groupesCompets(m => COMPS_COUPE.has(m.comp));
+  if (ETAT.coupes.length) v.append(carte(el("div", { class: "carte-tete" }, el("h2", { text: "🥇 Mes coupes" }), bouton("Gérer", () => allerVue("coupes"), "mini gris")),
+    el("ul", { class: "liste" }, ETAT.coupes.map(c => el("li", {}, el("div", { class: "item" }, el("span", { class: "i-ico", text: c.res === "gagne" ? "🏆" : c.res === "encours" ? "⏳" : "🥇" }), el("span", { class: "i-txt" }, el("b", { text: c.nom }), el("span", { text: [c.saison, RES_COUPE[c.res], c.buts ? `⚽ ${c.buts}` : null].filter(Boolean).join(" · ") }))))))));
+  if (!groupes.length && !ETAT.coupes.length) {
+    v.append(carte("🏆 Mes coupes", el("p", { class: "vide", text: "Aucun match de coupe pour l'instant. Choisis « Coupe… » ou « Tournoi » comme compétition dans un match, avec son tour (16e, quart, finale…) : ton parcours s'affichera ici." }), bouton("＋ Match de coupe", () => editerMatch(null), "mini vert")));
+    return;
+  }
+  groupes.forEach(g => {
+    const ms = [...g.ms].sort((a, b) => ordreTour(a.tour) - ordreTour(b.tour) || (a.d || "").localeCompare(b.d || ""));
+    const joues = ms.filter(m => !aVenir(m));
+    const der = joues[joues.length - 1];
+    let statut = "En course";
+    if (der && resultat(der) === "D") statut = `Éliminé${der.tour ? " en " + der.tour.toLowerCase() : ""}`;
+    if (der && der.tour === "Finale" && resultat(der) === "V") statut = "🏆 Vainqueur";
+    const poules = ms.filter(m => /poule|journée/i.test(m.tour || ""));
+    const elim = ms.filter(m => !/poule|journée/i.test(m.tour || ""));
+    const box = el("section", { class: "carte lg" },
+      el("div", { class: "carte-tete" }, el("div", {}, el("h2", { text: g.nom }), el("span", { class: "muted petit", text: `${fmtSaison(g.saison)} · ${statut}` })), boutonFavori("comps", g.k, g.nom)));
+    if (poules.length) {
+      const st = { j: 0, v: 0, n: 0, d: 0, bp: 0, bc: 0 }; poules.filter(m => !aVenir(m)).forEach(m => { st.j++; st[resultat(m).toLowerCase()]++; st.bp += +m.bp; st.bc += +m.bc; });
+      box.append(el("p", { class: "label-mini", text: "Phase de poules" }), el("p", { style: "margin:0", text: `${st.j} J · ${st.v}V ${st.n}N ${st.d}D · ${st.bp}-${st.bc} · ${st.v * 3 + st.n} pts` }), el("ul", { class: "liste" }, poules.map(itemMatch)));
+    }
+    if (elim.length) box.append(el("p", { class: "label-mini", text: "Tableau" }), el("ol", { class: "parcours" }, elim.map(m => {
+      const r = resultat(m), tab = ETAT.tab.filter(t => t.matchId === m.id);
+      return el("li", { class: r ? r.toLowerCase() : "avenir" }, el("button", { type: "button", onclick: () => ficheMatch(m.id) },
+        el("span", { class: "parcours-tour", text: m.tour || "Tour ?" }), ecusson(m.adv || "?"), el("span", { class: "parcours-adv", text: m.adv || "Adversaire" }),
+        el("b", { text: aVenir(m) ? (m.d ? court(m.d) : "à venir") : `${m.bp}-${m.bc}${tab.length ? " (tab)" : ""}` })));
+    })));
+    const mesB = ms.reduce((s, m) => s + butsDuMatch(m).length, 0);
+    box.append(el("p", { class: "aide", text: `Mes buts dans cette compétition : ${mesB}` }));
+    v.append(box);
+  });
+}
+const RES_COUPE = { gagne: "Gagnée", finale: "Finale perdue", demi: "Demi-finale", quart: "Quart de finale", huitieme: "Huitième de finale", poule: "Phase de poules", tour: "Premiers tours", encours: "Encore en course" };
+
+// ---------- Toutes mes compétitions ----------
+function blocToutesCompets(v) {
+  const groupes = groupesCompets(() => true);
+  if (!groupes.length) { v.append(carte(null, el("p", { class: "vide", text: "Tes compétitions apparaîtront ici dès ton premier match enregistré." }))); return; }
+  const favs = favoris().comps;
+  groupes.sort((a, b) => favs.includes(b.k) - favs.includes(a.k));
+  v.append(el("ul", { class: "liste" }, groupes.map(g => {
+    const st = { v: 0, n: 0, d: 0, bp: 0, bc: 0 }; g.ms.filter(m => !aVenir(m)).forEach(m => { st[resultat(m).toLowerCase()]++; st.bp += +m.bp; st.bc += +m.bc; });
+    const b = g.ms.reduce((s, m) => s + butsDuMatch(m).length, 0), p = g.ms.reduce((s, m) => s + passesDuMatch(m).length, 0);
+    return el("li", {}, el("div", { class: "item" },
+      el("button", { class: "item-corps", type: "button", onclick: () => { filtreStats.comp = g.comp; filtreStats.saison = g.saison === "inconnue" ? "" : g.saison; allerVue("stats"); } },
+        el("span", { class: "i-ico", text: COMPS_COUPE.has(g.comp) ? "🏆" : g.comp === "amical" ? "🤝" : "📊" }),
+        el("span", { class: "i-txt" }, el("b", { text: g.nom }), el("span", { text: `${fmtSaison(g.saison)} · ${pluriel(g.ms.length, "match")} · ${st.v}V ${st.n}N ${st.d}D · ${st.bp}-${st.bc} · ⚽ ${b} · 🎯 ${p}` }))),
+      boutonFavori("comps", g.k, g.nom)));
+  })));
+}
+
+// =====================================================================
+//  GRAPHIQUES (SVG, sans bibliothèque) : barres groupées et courbes,
+//  info-bulle au toucher, légende, vue tableau
+// =====================================================================
+const COULEURS_SERIES = ["var(--c1)", "var(--c2)"];
+function cadreGraph(svg, cats, series, opts, lireLigne) {
+  const box = el("div", { class: "graph" });
+  const bulle = el("div", { class: "graph-bulle", hidden: true, role: "status" });
+  const zone = el("div", { class: "graph-zone" }, svg, bulle);
+  if (series.length > 1) box.append(el("div", { class: "graph-legende" }, series.map((s, i) => el("span", {}, el("i", { style: `background:${COULEURS_SERIES[i]}` }), s.nom))));
+  box.append(zone);
+  const tableau = el("div", { class: "tableau", hidden: true }, el("table", {}, el("thead", {}, el("tr", {}, el("th", { text: opts.titreCat || "" }), series.map(s => el("th", { text: s.nom })))),
+    el("tbody", {}, cats.map((c, i) => el("tr", {}, el("td", { text: c }), series.map(s => el("td", { text: s.valeurs[i] == null ? "–" : fmt(s.valeurs[i]) + (opts.suffixe || "") })))))));
+  const bt = el("button", { class: "lien", type: "button" }, "Voir le tableau");
+  bt.addEventListener("click", () => { tableau.hidden = !tableau.hidden; zone.hidden = !tableau.hidden; bt.textContent = tableau.hidden ? "Voir le tableau" : "Voir le graphique"; });
+  box.append(tableau, bt);
+  const montrer = e => {
+    const r = svg.getBoundingClientRect(); if (!r.width) return;
+    const i = lireLigne((e.clientX - r.left) / r.width);
+    if (i == null || i < 0 || i >= cats.length) { bulle.hidden = true; return; }
+    bulle.textContent = "";
+    bulle.append(el("b", { text: cats[i] }), ...series.map((s, k) => el("span", {}, series.length > 1 ? el("i", { style: `background:${COULEURS_SERIES[k]}` }) : "", `${series.length > 1 ? s.nom + " : " : ""}${s.valeurs[i] == null ? "–" : fmt(s.valeurs[i]) + (opts.suffixe || "")}`)));
+    bulle.hidden = false;
+    const x = Math.max(4, Math.min(r.width - bulle.offsetWidth - 4, (e.clientX - r.left) - bulle.offsetWidth / 2));
+    bulle.style.left = x + "px";
+    svg.querySelectorAll(".g-actif").forEach(n => n.classList.remove("g-actif"));
+    svg.querySelectorAll(`[data-i="${i}"]`).forEach(n => n.classList.add("g-actif"));
+  };
+  svg.addEventListener("pointermove", montrer);
+  svg.addEventListener("pointerdown", montrer);
+  svg.addEventListener("pointerleave", () => { bulle.hidden = true; svg.querySelectorAll(".g-actif").forEach(n => n.classList.remove("g-actif")); });
+  return box;
+}
+const NS = "http://www.w3.org/2000/svg";
+const svgEl = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+function echelle(max) { const pas = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000]; const p = pas.find(x => max / x <= 4) || Math.ceil(max / 4); return { pas: p, max: Math.max(p, Math.ceil(max / p) * p) }; }
+function axes(svg, W, H, G, D, B, H0, ech, cats, opts) {
+  for (let v = 0; v <= ech.max; v += ech.pas) {
+    const y = H0 - (v / ech.max) * (H0 - 10);
+    svg.append(svgEl("line", { x1: G, x2: W - D, y1: y, y2: y, class: "g-grille" }));
+    const t = svgEl("text", { x: G - 6, y: y + 4, class: "g-axe", "text-anchor": "end" }); t.textContent = opts.inverse ? String(ech.max - v + (opts.inverse ? 1 : 0)) : String(v); svg.append(t);
+  }
+  const pasX = Math.ceil(cats.length / 6);
+  cats.forEach((c, i) => { if (i % pasX && i !== cats.length - 1) return; const x = G + (i + .5) * ((W - G - D) / cats.length); const t = svgEl("text", { x, y: H - 4, class: "g-axe", "text-anchor": "middle" }); t.textContent = c; svg.append(t); });
+}
+function graphBarres(cats, series, opts = {}) {
+  const W = 340, H = 180, G = 30, D = 6, B = 22, H0 = H - B;
+  const max = Math.max(1, ...series.flatMap(s => s.valeurs.map(v => +v || 0)));
+  const ech = echelle(max);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "g-svg", role: "img", "aria-label": opts.titre || "Graphique" });
+  axes(svg, W, H, G, D, B, H0, ech, cats, {});
+  const lc = (W - G - D) / cats.length, nb = series.length;
+  const lb = Math.max(3, Math.min(18, (lc - 6) / nb - 2));
+  cats.forEach((c, i) => {
+    series.forEach((s, k) => {
+      const v = +s.valeurs[i] || 0; if (!v) return;
+      const h = (v / ech.max) * (H0 - 10), x = G + i * lc + (lc - (lb * nb + 2 * (nb - 1))) / 2 + k * (lb + 2), y = H0 - h, r = Math.min(4, lb / 2, h);
+      svg.append(svgEl("path", { d: `M${x},${H0} V${y + r} Q${x},${y} ${x + r},${y} H${x + lb - r} Q${x + lb},${y} ${x + lb},${y + r} V${H0} Z`, fill: COULEURS_SERIES[k], class: "g-barre", "data-i": i }));
+    });
+  });
+  svg.append(svgEl("line", { x1: G, x2: W - D, y1: H0, y2: H0, class: "g-base" }));
+  return cadreGraph(svg, cats, series, opts, f => Math.floor(((f * W) - G) / lc));
+}
+function graphLignes(cats, series, opts = {}) {
+  const W = 340, H = 180, G = 30, D = 14, B = 22, H0 = H - B;
+  const inv = series[0] && series[0].inverse;
+  const max = inv ? Math.max(1, series[0].max || Math.max(...series[0].valeurs)) : Math.max(1, ...series.flatMap(s => s.valeurs.map(v => +v || 0)));
+  const ech = inv ? { pas: Math.max(1, Math.ceil(max / 4)), max } : echelle(max);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "g-svg", role: "img", "aria-label": opts.titre || "Graphique" });
+  if (inv) {
+    for (let r = 1; r <= max; r += ech.pas) { const y = 10 + ((r - 1) / Math.max(1, max - 1)) * (H0 - 20); svg.append(svgEl("line", { x1: G, x2: W - D, y1: y, y2: y, class: "g-grille" })); const t = svgEl("text", { x: G - 6, y: y + 4, class: "g-axe", "text-anchor": "end" }); t.textContent = opts.suffixe === "e" && r === 1 ? "1er" : r + (opts.suffixe || ""); svg.append(t); }
+    const pasX = Math.ceil(cats.length / 6);
+    cats.forEach((c, i) => { if (i % pasX && i !== cats.length - 1) return; const t = svgEl("text", { x: G + (i + .5) * ((W - G - D) / cats.length), y: H - 4, class: "g-axe", "text-anchor": "middle" }); t.textContent = c; svg.append(t); });
+  } else axes(svg, W, H, G, D, B, H0, ech, cats, {});
+  const lc = (W - G - D) / cats.length;
+  const yDe = v => inv ? 10 + ((v - 1) / Math.max(1, max - 1)) * (H0 - 20) : H0 - ((+v || 0) / ech.max) * (H0 - 10);
+  series.forEach((s, k) => {
+    const pts = s.valeurs.map((v, i) => [G + (i + .5) * lc, yDe(v)]);
+    svg.append(svgEl("polyline", { points: pts.map(p => p.map(x => x.toFixed(1)).join(",")).join(" "), fill: "none", stroke: COULEURS_SERIES[k], "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    pts.forEach(([x, y], i) => svg.append(svgEl("circle", { cx: x, cy: y, r: i === pts.length - 1 ? 4 : 3, fill: COULEURS_SERIES[k], class: "g-point" + (i === pts.length - 1 ? " dernier" : ""), "data-i": i })));
+    const [lx, ly] = pts[pts.length - 1] || [];
+    if (lx != null) { const t = svgEl("text", { x: Math.min(W - 2, lx), y: ly - 8, class: "g-etiquette", "text-anchor": "end" }); t.textContent = fmt(s.valeurs[s.valeurs.length - 1]) + (opts.suffixe || ""); svg.append(t); }
+  });
+  return cadreGraph(svg, cats, series, opts, f => Math.floor(((f * W) - G) / lc));
+}
+
+// ---------- Graphiques de la page Stats ----------
+let grapheStats = "evolution";
+function carteGraphiques(f) {
+  const ms = matchsJouesChrono().filter(m => matchOk(m, f));
+  const box = el("section", { class: "carte lg" }, el("h2", { text: "📈 Graphiques" }));
+  box.append(el("div", { class: "filtres", role: "group", "aria-label": "Graphique" }, [["evolution", "Évolution"], ["mois", "Par mois"], ["comp", "Compétitions"], ["lieu", "Dom. / ext."], ["temps", "Temps de jeu"], ["saisons", "Saisons"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(grapheStats === k), onclick: () => { grapheStats = k; rendreStats(); } }, l))));
+  if (!ms.length) { box.append(el("p", { class: "vide", text: "Les graphiques apparaissent dès ton premier match terminé." })); return box; }
+  const B = m => butsDuMatch(m).length, P = m => passesDuMatch(m).length;
+  const deux = (cats, fB, fP) => [{ nom: "Buts", valeurs: cats.map(fB) }, { nom: "Passes déc.", valeurs: cats.map(fP) }];
+  if (grapheStats === "evolution") {
+    let cb = 0, cp = 0; const vb = [], vp = [];
+    ms.forEach(m => { cb += B(m); cp += P(m); vb.push(cb); vp.push(cp); });
+    box.append(graphLignes(ms.map(m => court(m.d)), [{ nom: "Buts", valeurs: vb }, { nom: "Passes déc.", valeurs: vp }], { titre: "Buts et passes cumulés", titreCat: "Match" }), el("p", { class: "aide", text: "Total cumulé match après match." }));
+  } else if (grapheStats === "mois") {
+    const mois = [...new Set(ms.map(m => (m.d || "").slice(0, 7)).filter(Boolean))].sort().slice(-12);
+    const nomM = k => new Date(k + "-01T12:00").toLocaleDateString("fr-FR", { month: "short" });
+    box.append(graphBarres(mois.map(nomM), deux(mois, k => ms.filter(m => (m.d || "").startsWith(k)).reduce((s, m) => s + B(m), 0), k => ms.filter(m => (m.d || "").startsWith(k)).reduce((s, m) => s + P(m), 0)), { titreCat: "Mois" }));
+  } else if (grapheStats === "comp") {
+    const comps = COMPS.filter(([k]) => ms.some(m => m.comp === k));
+    box.append(graphBarres(comps.map(c => c[1].replace("Coupe régionale / départementale", "Coupe dép.")), deux(comps, ([k]) => ms.filter(m => m.comp === k).reduce((s, m) => s + B(m), 0), ([k]) => ms.filter(m => m.comp === k).reduce((s, m) => s + P(m), 0)), { titreCat: "Compétition" }));
+  } else if (grapheStats === "lieu") {
+    const lieux = LIEUX.filter(([k]) => ms.some(m => (m.lieu || "dom") === k));
+    box.append(graphBarres(lieux.map(l => l[1]), deux(lieux, ([k]) => ms.filter(m => (m.lieu || "dom") === k).reduce((s, m) => s + B(m), 0), ([k]) => ms.filter(m => (m.lieu || "dom") === k).reduce((s, m) => s + P(m), 0)), { titreCat: "Lieu" }),
+      el("p", { class: "aide", text: lieux.map(([k, l]) => { const mm = ms.filter(m => (m.lieu || "dom") === k); const r = { V: 0, N: 0, D: 0 }; mm.forEach(m => r[resultat(m)]++); return `${l} : ${mm.length} M · ${r.V}V ${r.N}N ${r.D}D`; }).join(" — ") }));
+  } else if (grapheStats === "temps") {
+    const der = ms.slice(-15);
+    box.append(graphBarres(der.map(m => court(m.d)), [{ nom: "Minutes", valeurs: der.map(m => minutesDe(m)) }], { suffixe: " min", titreCat: "Match" }), el("p", { class: "aide", text: "Minutes jouées sur tes 15 derniers matchs." }));
+  } else {
+    const ss = saisonsConnues().filter(s => ms.some(m => saisonMatch(m) === s)).reverse();
+    box.append(graphBarres(ss.map(saisonCourte), deux(ss, s => ms.filter(m => saisonMatch(m) === s).reduce((t, m) => t + B(m), 0), s => ms.filter(m => saisonMatch(m) === s).reduce((t, m) => t + P(m), 0)), { titreCat: "Saison" }));
+  }
+  box.append(el("p", { class: "aide", text: "Les buts du compteur rapide sans match ne sont pas dans les graphiques." }));
+  return box;
+}
+
+// =====================================================================
+//  PROFIL : fiche joueur, récompenses automatiques, favoris
+// =====================================================================
+const PIEDS_TXT = { droit: "Droitier", gauche: "Gaucher", deux: "Ambidextre" };
+function ficheJoueurPro() {
+  const p = ETAT.profil, sa = saisonActuelle(), meta = ETAT.saisonsMeta[sa] || {};
+  const tot = calculer({}), ag = age(p.naissance);
+  const numero = p.numero || meta.numero;
+  return el("section", { class: "carte lg fiche-pro" },
+    el("div", { class: "fiche-haut" }, avatar(true), numero ? el("span", { class: "fiche-numero", text: String(numero) }) : ""),
+    el("b", { class: "fiche-nom", text: nomJoueur() || "Ton nom" }),
+    el("span", { class: "muted", text: [p.poste || meta.poste, p.club || meta.club, p.equipeNom || meta.categorie].filter(Boolean).join(" · ") || "Poste · club · équipe" }),
+    el("div", { class: "puces", style: "justify-content:center" },
+      el("span", { class: "puce", text: `Saison ${fmtSaison(sa)}` }),
+      p.pied ? el("span", { class: "puce", text: PIEDS_TXT[p.pied] || p.pied }) : "",
+      p.naissance ? el("span", { class: "puce", text: `${joli(p.naissance)}${ag != null ? ` (${ag} ans)` : ""}` }) : "",
+      p.taille ? el("span", { class: "puce", text: `${p.taille} cm` }) : "",
+      p.nat ? el("span", { class: "puce", text: p.nat }) : ""),
+    el("div", { class: "pro-chiffres" }, [["Matchs", tot.matchs], ["Buts", tot.nbButs], ["Passes", tot.nbPasses], ["Minutes", tot.min], ["Trophées", tot.trophees]].map(([l, x]) => el("div", {}, el("b", { text: String(x) }), el("span", { text: l })))),
+    el("div", { class: "rangee", style: "justify-content:center" }, bouton("✏️ Modifier ma fiche", editerProfil, "capsule lg"), bouton("🏅 Ma carrière", () => ouvrirSection("carriere"), "capsule lg")),
+    el("p", { class: "aide", style: "text-align:center;margin:0", text: "🔒 Ta fiche est privée : visible seulement par toi." }));
+}
+function dateNieme(liste, n) {
+  const d = liste.map(x => dateDe(x) || x.d).filter(Boolean).sort();
+  return d[n - 1] || null;
+}
+function badges() {
+  const buts = ETAT.buts.filter(b => !b.csc), passes = ETAT.passes, matchs = matchsJouesChrono();
+  const tot = calculer({});
+  const maxMatch = Math.max(0, ...ETAT.matchs.map(m => butsDuMatch(m).length));
+  const premierAvec = n => matchs.find(m => butsDuMatch(m).length >= n);
+  const B = (id, ico, nom, val, seuil, date) => ({ id, ico, nom, val: Math.min(val, seuil), seuil, ok: val >= seuil, date });
+  return [
+    B("b1", "⚽", "Premier but", buts.length, 1, dateNieme(buts, 1)),
+    B("b10", "🔟", "10 buts", buts.length, 10, dateNieme(buts, 10)),
+    B("b25", "🎯", "25 buts", buts.length, 25, dateNieme(buts, 25)),
+    B("b50", "💫", "50 buts", buts.length, 50, dateNieme(buts, 50)),
+    B("b100", "👑", "100 buts", buts.length, 100, dateNieme(buts, 100)),
+    B("p1", "🤝", "Première passe déc.", passes.length, 1, dateNieme(passes, 1)),
+    B("p10", "🧠", "10 passes déc.", passes.length, 10, dateNieme(passes, 10)),
+    B("m1", "👟", "Premier match", matchs.length, 1, matchs[0] && matchs[0].d),
+    B("m10", "🏟️", "10 matchs", matchs.length, 10, matchs[9] && matchs[9].d),
+    B("m50", "🎽", "50 matchs", matchs.length, 50, matchs[49] && matchs[49].d),
+    B("m100", "🏅", "100 matchs", matchs.length, 100, matchs[99] && matchs[99].d),
+    B("x2", "✌️", "Premier doublé", maxMatch, 2, premierAvec(2) && premierAvec(2).d),
+    B("x3", "🎩", "Premier triplé", maxMatch, 3, premierAvec(3) && premierAvec(3).d),
+    B("min1000", "⏱️", "1 000 minutes", tot.min, 1000, null),
+    B("hdm", "⭐", "Homme du match", tot.hdm, 1, (matchs.find(m => m.hdm) || {}).d)
+  ];
+}
+function carteBadges() {
+  const l = badges(), ok = l.filter(b => b.ok).length;
+  const saisons = saisonsConnues().map(s => [s, calculer({ saison: s })]).filter(([, x]) => x.matchs || x.nbButs);
+  const meilleure = saisons.sort((a, b) => b[1].nbButs - a[1].nbButs || b[1].nbPasses - a[1].nbPasses)[0];
+  const record = Math.max(0, ...ETAT.matchs.map(m => butsDuMatch(m).length));
+  return el("section", { class: "carte lg" },
+    el("div", { class: "carte-tete" }, el("h2", { text: "🎖️ Mes récompenses" }), el("span", { class: "puce", text: `${ok} / ${l.length}` })),
+    el("div", { class: "badges" }, l.map(b => el("div", { class: "badge-c" + (b.ok ? " ok" : ""), title: b.nom },
+      el("span", { class: "badge-ico", "aria-hidden": "true", text: b.ok ? b.ico : "🔒" }), el("b", { text: b.nom }),
+      el("span", { class: "muted petit", text: b.ok ? (b.date ? court(b.date) : "Obtenu") : `${b.val} / ${b.seuil}` }),
+      !b.ok ? el("span", { class: "jauge" }, el("span", { style: `width:${Math.round(100 * b.val / b.seuil)}%` })) : ""))),
+    meilleure ? el("p", { class: "aide", text: `🏆 Meilleure saison : ${fmtSaison(meilleure[0])} (${pluriel(meilleure[1].nbButs, "but")}, ${pluriel(meilleure[1].nbPasses, "passe")}) · Record en un match : ${pluriel(record, "but")}` }) : "",
+    el("p", { class: "aide", text: "Calculées à partir de tes vrais matchs, buts et passes." }));
+}
+function carteFavoris() {
+  const f = favoris();
+  const items = [
+    ...f.clubs.map(c => bouton(`⭐ ${c}`, () => { filtreStats.club = c; allerVue("stats"); }, "chip")),
+    ...f.comps.map(k => { const g = k === "ligue" ? { nom: ETAT.ligue ? ETAT.ligue.nom : "Ma ligue" } : groupesCompets(() => true).find(x => x.k === k); return g ? bouton(`⭐ ${g.nom}`, () => { ongletComp = k === "ligue" ? "champ" : "toutes"; allerVue("competitions"); }, "chip") : null; }).filter(Boolean),
+    ...f.joueurs.map(id => { const j = ETAT.joueurs.find(x => x.id === id); return j ? bouton(`⭐ ${j.nom || "Joueur"}`, () => { cmp.mode = "joueurs"; cmp.b = id; ouvrirSection("comparer"); }, "chip") : null; }).filter(Boolean)
+  ];
+  return carte("⭐ Mes favoris", items.length ? el("div", { class: "puces" }, items) : el("p", { class: "aide", style: "margin:0", text: "Touche ☆ à côté d'un club, d'une compétition ou d'un joueur pour le retrouver ici." }),
+    clubsConnus().length ? el("div", { class: "puces" }, clubsConnus().filter(c => !f.clubs.includes(c)).slice(0, 6).map(c => el("button", { class: "chip", type: "button", onclick: () => basculerFavori("clubs", c) }, `☆ ${c}`))) : "");
+}
+function carteObjectifs() {
+  const o = ETAT.profil.objectifs || [];
+  if (!o.length) return carte("🎯 Mes objectifs", el("p", { class: "aide", style: "margin:0", text: "Choisis ce que tu veux améliorer : tes entraînements s'adaptent." }), bouton("Choisir mes objectifs", () => demarrerOnboarding("PLAYER", true), "mini gris"));
+  return carte("🎯 Mes objectifs", el("div", { class: "puces" }, o.map(k => el("span", { class: "puce", text: `${icoCat(k)} ${(OBJECTIFS.find(x => x[0] === k) || [k, k])[1]}` }))));
+}
+
+// =====================================================================
+//  ÉQUIPE (onglet joueur) : mon équipe, effectif, convocations, présences
+// =====================================================================
+function rendreEquipeJoueur(v) {
+  v.textContent = "";
+  v.append(el("header", { class: "top" }, el("h1", { text: "Mon équipe 👥" })));
+  SECTIONS.equipe(v);
+  const membre = statutJoueur() === "membre";
+  if (membre) {
+    const conv = itemsVus(["msg"]).filter(m => m.kind === "match" && m.match && m.match.date >= aujourdHui()).sort((a, b) => a.match.date.localeCompare(b.match.date));
+    v.append(carte("📢 Convocations", conv.length ? el("ul", { class: "liste" }, conv.map(m => el("li", { class: "conv" }, el("b", { text: `${m.match.domicile === false ? "à" : "vs"} ${m.match.adv || "?"} · ${joli(m.match.date)}${m.match.heure ? " · " + m.match.heure : ""}` }), m.match.rdv ? el("span", { class: "muted petit", text: `RDV ${m.match.rdv}${m.match.lieu ? " · " + m.match.lieu : ""}` }) : "", blocPresence(m)))) : el("p", { class: "vide", text: "Pas de convocation pour l'instant." })));
+    const eff = joueursValides().sort((a, b) => (+a.numero || 99) - (+b.numero || 99));
+    v.append(carte(`👕 Effectif (${eff.length})`, eff.length ? el("ul", { class: "effectif" }, eff.map(j => el("li", { class: j.id === EQ.moi ? "moi" : "" },
+      el("span", { class: "eff-num", text: j.numero ? String(j.numero) : "–" }), el("span", { class: "i-txt" }, el("b", { text: nomPublic(j) }), el("span", { class: "muted petit", text: j.poste || "Poste non renseigné" }))))) : el("p", { class: "vide", text: "L'effectif s'affiche quand le coach a validé les joueurs." }),
+      el("p", { class: "aide", text: "Seuls le prénom, le numéro et le poste sont partagés : jamais les photos ni les dates de naissance." })));
+  }
+  v.append(el("div", { class: "menu" }, [["calendrier", "📅", "Calendrier"], ["travail", "📋", "Travail du coach"], ["messages", "💬", "Messages"], ["entrainement", "🏋️", "Entraînement"]].map(([k, ico, nom]) => el("button", { class: "lg", type: "button", onclick: () => allerVue(k) }, el("span", { class: "ico", text: ico }), nom))));
+}
+function blocPresence(m) {
+  if (!m || m.kind !== "match") return "";
+  if (estCoach()) {
+    const js = joueursValides(), c = { oui: [], non: [] };
+    js.forEach(j => { const r = (j.presences || {})[m.id]; if (r === "oui" || r === "non") c[r].push(nomPublic(j)); });
+    const sans = js.length - c.oui.length - c.non.length;
+    return el("div", { class: "presences" }, el("span", { class: "puce v", text: `✅ ${c.oui.length} présent${c.oui.length > 1 ? "s" : ""}` }), el("span", { class: "puce d", text: `❌ ${c.non.length} absent${c.non.length > 1 ? "s" : ""}` }), el("span", { class: "puce", text: `❓ ${sans} sans réponse` }),
+      c.oui.length || c.non.length ? el("p", { class: "aide", style: "width:100%;margin:0", text: [c.oui.length ? "Présents : " + c.oui.join(", ") : null, c.non.length ? "Absents : " + c.non.join(", ") : null].filter(Boolean).join(" · ") }) : "");
+  }
+  if (!EQ.monJoueur || !EQ.monJoueur.equipe) return "";
+  const r = (EQ.monJoueur.presences || {})[m.id];
+  const choisir = x => { const pr = { ...(EQ.monJoueur.presences || {}) }; pr[m.id] = x; majMonJoueur({ presences: pr }).then(() => { toast(x === "oui" ? "✅ Le coach sait que tu seras là" : "❌ Le coach sait que tu seras absent"); toutRafraichir(); }); };
+  return el("div", { class: "presences", role: "group", "aria-label": "Ma présence" },
+    el("button", { class: "chip", type: "button", "aria-pressed": String(r === "oui"), onclick: () => choisir("oui") }, "✅ Présent"),
+    el("button", { class: "chip", type: "button", "aria-pressed": String(r === "non"), onclick: () => choisir("non") }, "❌ Absent"));
+}
+
+// =====================================================================
+//  ACCUEIL : prochain / dernier match, classement, évolution, personnalisation
+// =====================================================================
+const BLOCS_ACCUEIL = [["prochain", "Prochain match"], ["dernier", "Dernier match"], ["classement", "Classement actuel"], ["evolution", "Évolution de la saison"], ["tuiles", "Mes chiffres"], ["encemoment", "Dernier but et dernière passe"], ["total", "Total carrière et saison"]];
+const accueilMasque = k => (ETAT.profil.accueilMasque || []).includes(k);
+function blocsAccueilMatchs(v) {
+  const direct = ETAT.matchs.filter(enDirect);
+  direct.forEach(m => v.append(carteMatchAffiche(m, { titre: "🔴 EN DIRECT" })));
+  if (direct.length) surveillerDirect();
+  if (!accueilMasque("prochain")) {
+    const prochain = matchsTries(false).find(aVenirVrai);
+    v.append(prochain ? carteMatchAffiche(prochain, { titre: "PROCHAIN MATCH" }) : el("button", { class: "carte lg affiche vide-affiche", type: "button", onclick: () => editerMatch(null) }, el("span", { class: "affiche-titre", text: "PROCHAIN MATCH" }), el("span", { class: "muted", text: "Aucun match prévu. Ajoute ton prochain match (date, heure, lieu) pour voir le compte à rebours." })));
+  }
+  if (!accueilMasque("dernier")) {
+    const js = matchsJouesChrono(), m = js[js.length - 1];
+    if (m) {
+      const nb = butsDuMatch(m).length, np = passesDuMatch(m).length;
+      const buteurs = lignesEvenements(m.buteurs).map(x => x.txt).filter(Boolean);
+      v.append(carteMatchAffiche(m, { titre: "DERNIER MATCH" }));
+      const infos = [nb ? `⚽ ${nb} but${nb > 1 ? "s" : ""}` : null, np ? `🎯 ${np} passe${np > 1 ? "s" : ""}` : null, buteurs.length ? `Buteurs : ${buteurs.join(", ")}` : null, m.mdm ? `🏅 ${m.mdm}` : m.hdm ? "🏅 Homme du match" : null].filter(Boolean);
+      if (infos.length) v.append(el("p", { class: "aide", style: "text-align:center;margin-top:-8px", text: infos.join(" · ") }));
+    }
+  }
+  if (!accueilMasque("classement") && ETAT.ligue) {
+    const g = classementLigue("general"), i = g.findIndex(e => e.n === ETAT.ligue.moi);
+    if (i >= 0) v.append(el("button", { class: "carte lg ligne-classement", type: "button", onclick: () => { ongletComp = "champ"; allerVue("competitions"); } },
+      ecusson(ETAT.ligue.moi), el("span", { class: "i-txt" }, el("b", { text: `${i === 0 ? "1er" : i + 1 + "e"} sur ${g.length} · ${pluriel(g[i].pts, "point")}` }), el("span", { class: "muted petit", text: ETAT.ligue.nom })), el("span", { class: "chev", "aria-hidden": "true", text: "›" })));
+  }
+}
+function blocEvolutionAccueil(v) {
+  if (accueilMasque("evolution")) return;
+  const sa = saisonVue || saisonActuelle();
+  const ms = matchsJouesChrono().filter(m => saisonMatch(m) === sa);
+  if (ms.length < 2) return;
+  let c = 0; const vals = ms.map(m => (c += butsDuMatch(m).length));
+  v.append(carte(`📈 Mes buts en ${fmtSaison(sa)}`, graphLignes(ms.map(m => court(m.d)), [{ nom: "Buts", valeurs: vals }], { titreCat: "Match" })));
+}
+function personnaliserAccueil() {
+  feuille("Personnaliser l'accueil", corps => {
+    const masque = new Set(ETAT.profil.accueilMasque || []);
+    corps.append(el("p", { class: "aide", text: "Choisis les cartes à afficher sur l'accueil." }),
+      ...BLOCS_ACCUEIL.map(([k, l]) => { const id = "acc-" + k; const c = el("input", { type: "checkbox", id }); c.checked = !masque.has(k); c.addEventListener("change", () => { if (c.checked) masque.delete(k); else masque.add(k); ETAT.profil.accueilMasque = [...masque]; sauver(); toutRafraichir(); }); return el("label", { class: "coche", for: id }, c, " ", l); }));
+  });
+}
+
+// =====================================================================
+//  NOTIFICATIONS : rappels personnels et choix des types
+// =====================================================================
+const TYPES_NOTIF = [["match", "⚽ Un match approche"], ["resultat", "✏️ Résultat à saisir"], ["classement", "📊 Le classement a changé"], ["convocation", "📢 Convocations"], ["entrainement", "📌 Entraînements et événements"], ["info", "📣 Annonces importantes"]];
+const notifActive = k => !(ETAT.profil.notifOff || []).includes(k);
+function categorieNotif(n) {
+  if (n.cat) return n.cat;
+  const t = n.txt || "";
+  if (t.startsWith("🏆 Match")) return "convocation";
+  if (t.startsWith("📢")) return "info";
+  if (t.startsWith("📌") || t.startsWith("📋")) return "entrainement";
+  return "equipe";
+}
+function notifsPerso() {
+  const out = [];
+  if (estCoach()) return out;
+  matchsTries(false).filter(aVenirVrai).forEach(m => {
+    const j = Math.round((dateObj(m.d) - dateObj(aujourdHui())) / 864e5);
+    if (j >= 0 && j <= 2) out.push({ id: "pm-" + m.id, cat: "match", txt: `⚽ Match ${jourRelatif(m.d)}`, sous: `vs ${m.adv || "?"}${m.heure ? " · " + m.heure : ""}${lieuTexte(m) ? " · " + lieuTexte(m) : ""}`, t: Date.now() - 2, nouveau: false, ouvrir: () => ficheMatch(m.id) });
+  });
+  ETAT.matchs.filter(scoreASaisir).filter(m => (dateObj(aujourdHui()) - dateObj(m.d)) / 864e5 <= 7).forEach(m => out.push({ id: "rs-" + m.id, cat: "resultat", txt: "✏️ Score à saisir", sous: `vs ${m.adv || "?"} · ${court(m.d)}`, t: Date.now() - 3, nouveau: false, ouvrir: () => editerMatch(m) }));
+  if (ETAT.ligue) {
+    const i = classementLigue("general").findIndex(e => e.n === ETAT.ligue.moi);
+    const vu = ETAT.profil.rangVu;
+    if (i >= 0 && vu == null) { ETAT.profil.rangVu = i + 1; }
+    else if (i >= 0 && vu !== i + 1) out.push({ id: "cl-" + (i + 1), cat: "classement", txt: `📊 ${ETAT.ligue.moi} ${i + 1 < vu ? "monte" : "descend"} : ${i === 0 ? "1er" : i + 1 + "e"}`, sous: `${ETAT.ligue.nom} (avant : ${vu}e)`, t: Date.now() - 1, nouveau: true, ouvrir: () => { ETAT.profil.rangVu = i + 1; sauver(); ongletComp = "champ"; allerVue("competitions"); } });
+  }
+  if (typeof itemsVus === "function") itemsVus(["event"]).forEach(e => {
+    if (!e.date) return; const j = Math.round((dateObj(e.date) - dateObj(aujourdHui())) / 864e5);
+    if (j >= 0 && j <= 1) out.push({ id: "ev-" + e.id, cat: "entrainement", txt: `📌 ${e.titre || "Événement"} ${jourRelatif(e.date)}`, sous: [e.heure, e.lieu].filter(Boolean).join(" · "), t: Date.now() - 4, nouveau: false, ouvrir: () => ficheEvenement(e) });
+  });
+  return out;
+}
+function filtrerNotifs(liste) { return liste.filter(n => notifActive(categorieNotif(n))); }
+
+// =====================================================================
+//  RÉGLAGES : couleur, notifications, données, à propos
+// =====================================================================
+const ACCENTS = [["", "Automatique"], ["#2f8cff", "Bleu"], ["#1fae63", "Vert"], ["#e8831c", "Orange"], ["#8b5cf6", "Violet"], ["#e0457b", "Rose"]];
+function appliquerAccent() { let a = ""; try { a = localStorage.getItem("accent") || ""; } catch (e) {} if (a) document.documentElement.style.setProperty("--accent", a); else document.documentElement.style.removeProperty("--accent"); }
+appliquerAccent();
+function blocsReglagesPlus(box) {
+  let a = ""; try { a = localStorage.getItem("accent") || ""; } catch (e) {}
+  box.append(carte("🎨 Couleur de l'appli", el("div", { class: "chips-choix", role: "radiogroup", "aria-label": "Couleur" }, ACCENTS.map(([c, l]) => el("button", { class: "chip", type: "button", role: "radio", "aria-checked": String(a === c), "aria-pressed": String(a === c), onclick: () => { try { if (c) localStorage.setItem("accent", c); else localStorage.removeItem("accent"); } catch (e) {} appliquerAccent(); rafraichirFeuilles(); if (vueCourante === "section") rendreSection("reglages"); } }, c ? el("i", { class: "pastille", style: `background:${c}` }) : "", l)))));
+  box.append(carte("🔔 Notifications",
+    el("div", { class: "form" }, TYPES_NOTIF.map(([k, l]) => { const id = "nt-" + k; const c = el("input", { type: "checkbox", id }); c.checked = notifActive(k); c.addEventListener("change", () => { const off = new Set(ETAT.profil.notifOff || []); if (c.checked) off.delete(k); else off.add(k); ETAT.profil.notifOff = [...off]; sauver(); if (typeof majBadges === "function") majBadges(); }); return el("label", { class: "coche", for: id }, c, " ", l); })),
+    el("p", { class: "aide", text: "Elles s'affichent dans la cloche 🔔 quand l'appli est ouverte. L'appli ne peut pas envoyer de notification sur ton téléphone quand elle est fermée." })));
+  box.append(carte("💾 Mes données",
+    el("p", { class: "aide", style: "margin:0", text: "Exporte une copie de toute ta carrière, importe une sauvegarde ou restaure une copie automatique." }),
+    el("div", { class: "rangee" }, bouton("💾 Sauvegarde, export, import", () => { pile.slice().forEach(x => x.fermer()); ouvrirSection("sauvegarde"); }, "mini gris"), bouton("🏠 Personnaliser l'accueil", personnaliserAccueil, "mini gris"))));
+  box.append(carte("ℹ️ À propos",
+    el("p", { style: "margin:0", text: "Mon Compteur de Buts — ta carrière de footballeur : matchs, buts, stats, compétitions, équipe et entraînement." }),
+    el("details", {}, el("summary", { text: "Conditions d'utilisation" }), el("ul", { class: "consignes" },
+      el("li", { text: "L'appli sert à suivre ta propre carrière. Les chiffres viennent de ce que tu saisis ou importes : vérifie-les." }),
+      el("li", { text: "Elle n'est pas liée à la FFF ni à myFFF et ne récupère aucune donnée officielle." }),
+      el("li", { text: "Respecte les autres dans les messages d'équipe. Tout message peut être signalé." }),
+      el("li", { text: "Ne partage pas tes données personnelles (adresse, téléphone) dans l'appli." }))),
+    el("p", { class: "aide", text: "Tes données sont enregistrées sur ton compte Claude, privées. Rien n'est vendu ni partagé." })));
+}
 
 // =====================================================================
 //  Démarrage : profil local tout de suite, puis compte en ligne,
