@@ -1958,6 +1958,8 @@ function validerImport(o) {
 function appliquerImport(o) {
   if (o.version === 2) etatDepuis(o);
   else etatDepuis({ buts: migrerAncien(o), coupes: o.coupes, ligue: o.ligue, compteurDoc: {} });
+  // une sauvegarde restaurée ne doit pas relancer la remise à zéro
+  if (typeof REINIT_ID !== "undefined") ETAT.profil.reinitFait = REINIT_ID;
 }
 
 // =====================================================================
@@ -7104,7 +7106,7 @@ function verifierImport({ matchs, remarque }) {
     const ok = bouton("✅ Ajouter à ma carrière", () => {
       const g = matchs.filter(m => m.garder);
       if (g.some(m => !m.d)) { toast("Mets une date à chaque match coché.", 4000); return; }
-      f.fermer(); appliquerImport(g);
+      f.fermer(); appliquerImportCapture(g);
     }, "mini vert capt-gros");
     corps.append(
       el("p", { text: "Voici ce que j'ai lu. Corrige si besoin, décoche ce qui est faux." }),
@@ -7140,7 +7142,7 @@ function carteImport(m, maj) {
   return boite;
 }
 
-function appliquerImport(liste) {
+function appliquerImportCapture(liste) {
   const fin = () => {
     let nb = 0, nbB = 0, nbP = 0;
     liste.forEach(x => {
@@ -7277,7 +7279,7 @@ function carteClubsSemblables() {
 //  fiche d'équipe, comme une toute première ouverture. Une copie de secours
 //  est faite avant (restaurable dans Plus › Sauvegarde).
 // =====================================================================
-async function reinitialiserTout() {
+async function reinitialiserTout(marque) {
   const att = feuille("Réinitialisation…", corps => corps.append(el("div", { class: "capt-attente" }, el("span", { class: "capt-rond", "aria-hidden": "true" }), el("span", { text: "J'efface tout… ne ferme pas l'appli." }))), { critique: true });
   let copie = false;
   try { if (assets) { await creerBackup("Avant réinitialisation"); copie = true; } } catch (e) {}
@@ -7297,9 +7299,9 @@ async function reinitialiserTout() {
       dernierEcrit = {};
     }
     try { [CLE_LOCALE, CLE_ANCIENNE, "ambiance", "lg-niveau", "son-entrainement"].forEach(k => localStorage.removeItem(k)); } catch (e) {}
-    etatDepuis({ backups: garde });
+    etatDepuis({ backups: garde, profil: { reinitFait: REINIT_ID } });
     sauverLocal();
-    if (dbCol && garde.length) { ecrireTout(); await fileEcriture; }
+    if (dbCol) { ecrireTout(); await fileEcriture; }
   } catch (e) {
     att.fermer(); toast("La réinitialisation n'a pas pu se terminer. Réessaie.", 6000); return;
   }
@@ -7310,6 +7312,21 @@ function demanderReinitialisation() {
   confirmer("Tout effacer ? Tes matchs, buts, passes, stats, entraînements, ton profil et ta place dans une équipe seront supprimés. L'appli redémarre comme la toute première fois.", () => {
     confirmer(assets ? "Dernière confirmation. Une copie de secours est faite juste avant : tu pourras la récupérer dans Plus › Sauvegarde." : "Dernière confirmation : ce sera définitif.", reinitialiserTout);
   });
+}
+
+// Remise à zéro demandée par le joueur (16/11/2026) : faite une seule fois, au premier
+// lancement de cette version, sur le compte en ligne et sur cet appareil.
+const REINIT_ID = "remise-a-zero-2026-11-16";
+function remiseAZeroUnique() {
+  if (ETAT.profil.reinitFait === REINIT_ID) return false;
+  let faite = false; try { faite = localStorage.getItem("reinit-fait") === REINIT_ID; } catch (e) {}
+  const aDesDonnees = ETAT.profil.role || ETAT.profil.onb || ETAT.matchs.length || ETAT.buts.length || ETAT.passes.length || ETAT.entrainement.seances.length;
+  if (faite || !aDesDonnees) { ETAT.profil.reinitFait = REINIT_ID; return false; }
+  // dans l'appli Claude : on attend d'être connecté au compte pour tout effacer au bon endroit
+  if (window.claude?.use && !dbCol) return false;
+  try { localStorage.setItem("reinit-fait", REINIT_ID); } catch (e) {}
+  reinitialiserTout();
+  return true;
 }
 
 // =====================================================================
@@ -8185,6 +8202,7 @@ const roleAvant = ETAT.profil.role || null;
 // filet de sécurité : jamais d'écran de chargement infini
 setTimeout(routerUneFois, 12000);
 chargerEnLigne().then(() => {
+  if (remiseAZeroUnique()) return;
   if (!routeFaite) routerUneFois();
   else if ((ETAT.profil.role || null) !== roleAvant || (ETAT.profil.onb && !ETAT.profil.onb.fini && vueCourante !== "bienvenue")) router();
   eqDemarrer();
