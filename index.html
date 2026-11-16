@@ -8209,5 +8209,47 @@ chargerEnLigne().then(() => {
 });
 </script>
 
+<div id="installer" class="installer" hidden role="dialog" aria-label="Installer l'appli">
+  <div class="installer-txt"><b>📲 Installe l'appli</b><span id="installerAide"></span></div>
+  <button type="button" id="installerOk" class="mini vert" hidden>Installer</button>
+  <button type="button" id="installerNon" class="installer-x" aria-label="Fermer">✕</button>
+</div>
+<style>
+.installer { position: fixed; z-index: 85; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); max-width: 520px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 16px; border-radius: 22px; color: var(--fg); background: rgb(14 36 92 / .94); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: inset 0 .5px 0 rgb(255 255 255 / .5), 0 10px 30px rgb(0 0 0 / .35); }
+[data-ambiance="clair"] .installer { background: rgb(255 255 255 / .95); }
+.installer[hidden] { display: none !important; }
+.installer-txt { display: flex; flex-direction: column; gap: 2px; flex: 1; font-size: .85rem; }
+.installer-txt span { color: var(--muted); }
+.installer-x { appearance: none; border: 0; background: none; color: var(--muted); font-size: 1.1rem; min-width: 44px; min-height: 44px; cursor: pointer; }
+</style>
+<script>
+// Site installable : service worker (marche sans réseau) + aide à l'installation
+(() => {
+  const installe = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  // demande au navigateur de ne pas effacer les données de l'appli
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  if (installe) return;
+  const box = document.getElementById("installer"), aide = document.getElementById("installerAide"), ok = document.getElementById("installerOk");
+  let refus = false; try { refus = localStorage.getItem("installer-non") === "1"; } catch (e) {}
+  if (refus) return;
+  const fermer = () => { box.hidden = true; try { localStorage.setItem("installer-non", "1"); } catch (e) {} };
+  document.getElementById("installerNon").addEventListener("click", fermer);
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (ios) {
+    aide.textContent = "Touche Partager ⬆️ en bas de Safari, puis « Sur l'écran d'accueil ».";
+    setTimeout(() => { box.hidden = false; }, 2500);
+  }
+  let invite = null;
+  addEventListener("beforeinstallprompt", e => {
+    e.preventDefault(); invite = e;
+    aide.textContent = "Ouvre-la comme une vraie appli, même sans internet.";
+    ok.hidden = false; box.hidden = false;
+  });
+  ok.addEventListener("click", async () => { if (!invite) return; invite.prompt(); try { await invite.userChoice; } catch (e) {} invite = null; box.hidden = true; });
+  addEventListener("appinstalled", () => { box.hidden = true; });
+})();
+</script>
+
 </body>
 </html>

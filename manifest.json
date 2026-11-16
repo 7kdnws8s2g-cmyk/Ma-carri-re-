@@ -1,21 +1,18 @@
 {
+  "id": "./",
   "name": "Ma carrière ⚽",
   "short_name": "Ma carrière",
+  "description": "Ta carrière de footballeur : matchs, buts, stats, compétitions et entraînement.",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0a1f52",
   "theme_color": "#0a1f52",
   "lang": "fr",
+  "categories": ["sports"],
   "icons": [
-    {
-      "src": "icone-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icone-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
