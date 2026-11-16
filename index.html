@@ -1159,6 +1159,13 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 .eff-num { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 900 .95rem var(--num); background: color-mix(in srgb, var(--accent) 35%, transparent); flex: none; }
 .pastille { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
 @media (max-width: 370px) { .badges { grid-template-columns: repeat(2, minmax(0, 1fr)); } .parcours button { grid-template-columns: 74px auto 1fr auto; } .onglets[data-role="PLAYER"] button { font-size: .62rem !important; } }
+
+/* ---------- Choix du type de capture ---------- */
+.capt-modes { display: flex; flex-direction: column; gap: 10px; }
+.capt-mode { appearance: none; width: 100%; color: var(--fg); font: inherit; text-align: left; display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 14px 40px 14px 14px; cursor: pointer; }
+.capt-mode .i-txt { display: flex; flex-direction: column; gap: 2px; }
+.capt-mode .chev { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: var(--muted); }
+.capt-mode-ico { font-size: 1.7rem; flex: none; width: 36px; text-align: center; }
 </style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
@@ -1339,7 +1346,7 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
     <section class="carte lg" id="ligue">
       <div class="carte-tete">
         <h2 id="ligueTitre">📊 Ma ligue</h2>
-        <button class="mini" id="ligueReglages" hidden>Modifier</button>
+        <span class="rangee"><button class="mini gris" type="button" onclick="lancerImportCapture('classement')">📸</button><button class="mini" id="ligueReglages" hidden>Modifier</button></span>
       </div>
       <div class="carte" id="importZone" hidden style="background: color-mix(in srgb, var(--accent) 18%, transparent); padding: 14px; border-radius: 20px;">
         <p id="importTxt" style="margin:0;font-weight:600"></p>
@@ -3401,6 +3408,7 @@ function rendreAccueil() {
     el("button", { class: "btn btn-total lg", type: "button", onclick: () => allerVue("compteur") }, "⚽ Compteur"),
     el("button", { class: "btn btn-total lg", type: "button", onclick: () => editerMatch(null) }, "＋ Match"),
     el("button", { class: "btn btn-total lg", type: "button", onclick: () => editerBut(null) }, "＋ But")));
+  v.append(el("div", { class: "rangee", style: "justify-content:center;margin-top:-6px" }, bouton("📸 Importer une capture (matchs, classement, stats…)", () => lancerImportCapture(), "lien")));
 
   const tuile = (lab, val, sous, onclick, cls) => {
     const [ico, ...mots] = lab.split(" ");
@@ -3619,7 +3627,7 @@ function blocStats(s) {
 }
 function rendreStats() {
   const v = $("v-stats"); v.textContent = "";
-  v.append(el("header", { class: "top" }, el("h1", { text: "Statistiques 📊" })));
+  v.append(el("header", { class: "top" }, el("h1", { text: "Statistiques 📊" }), el("button", { class: "mini gris", type: "button", "aria-label": "Importer les statistiques d'un match depuis une capture", onclick: () => lancerImportCapture("stats") }, "📸 Stats")));
   const maj = (k, x) => { filtreStats[k] = x; rendreStats(); };
   v.append(el("div", { class: "sel-filtres" },
     selectFiltre("fsS", "Saison", [["", "Saisons"], ...saisonsConnues().map(s => [s, fmtSaison(s)])], filtreStats.saison, x => maj("saison", x)),
@@ -7003,25 +7011,37 @@ function fichiersCapture(max, rappel) {
   inp.click();
 }
 
-async function lancerImportCapture() {
+// mode : "matchs", "classement", "resultats" ou "stats" (voir 22-captures.js) ; sans mode, on demande quoi importer
+async function lancerImportCapture(mode, ctx) {
   const ia = await obtenirLecteurIA();
   if (!ia) {
     feuille("Importer une capture", corps => {
       corps.append(el("p", { text: "📸 Cette fonction utilise Claude pour lire tes captures d'écran." }),
-        el("p", { class: "aide", text: "Elle marche seulement quand tu ouvres l'appli dans Claude (pas sur le site Safari). Ouvre « Mon Compteur de Buts » dans l'appli Claude, puis reviens ici." }));
+        el("p", { class: "aide", text: "Elle marche seulement quand tu ouvres l'appli dans Claude (pas sur le site installé dans Safari) : l'intelligence artificielle qui lit les images est celle de ton compte Claude. Ouvre « Mon Compteur de Buts » dans l'appli Claude, puis reviens ici. Tu peux ensuite exporter tes données et les importer sur le site." }));
     });
     return;
   }
   const max = Math.min(ia.lim.maxCount || 1, 5);
-  feuille("Importer une capture", (corps, f) => {
-    corps.append(
-      el("p", { text: "📸 Prends une capture de tes résultats (appli du club, feuille de match, site de la ligue, tableau de stats…) et je recrée tes matchs, buts et passes." }),
-      el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Tu vérifies tout avant que ce soit ajouté.` }),
-      bouton("📷 Choisir mes captures", () => fichiersCapture(max, fs => { f.fermer(); analyserCaptures(ia, fs); }), "mini vert capt-gros"));
+  const choisir = (m, f) => fichiersCapture(max, fs => { f.fermer(); analyserCaptures(ia, fs, m, ctx); });
+  if (!mode) {
+    feuille("Importer une capture", (corps, f) => {
+      corps.append(el("p", { text: "📸 Qu'est-ce qu'il y a sur ta capture ?" }),
+        el("div", { class: "capt-modes" }, Object.entries(MODES_CAPTURE).map(([k, x]) => el("button", { class: "carte lg capt-mode", type: "button", onclick: () => choisir(k, f) },
+          el("span", { class: "capt-mode-ico", "aria-hidden": "true", text: x.ico }), el("span", { class: "i-txt" }, el("b", { text: x.titre }), el("span", { class: "muted petit", text: x.aide })), el("span", { class: "chev", "aria-hidden": "true", text: "›" })))),
+        el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Rien n'est ajouté avant que tu aies vérifié.` }));
+    });
+    return;
+  }
+  const x = MODES_CAPTURE[mode];
+  feuille(x.titre, (corps, f) => {
+    corps.append(el("p", { text: `${x.ico} ${x.explication || x.aide}` }),
+      el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Tu vérifies tout avant que ce soit enregistré.` }),
+      bouton("📷 Choisir mes captures", () => choisir(mode, f), "mini vert capt-gros"));
   });
 }
 
-function analyserCaptures(ia, fichiers) {
+function analyserCaptures(ia, fichiers, mode = "matchs", ctx) {
+  const M = MODES_CAPTURE[mode] || MODES_CAPTURE.matchs;
   const ctl = new AbortController();
   let fini = false;
   const fe = feuille("Lecture en cours…", corps => {
@@ -7030,8 +7050,8 @@ function analyserCaptures(ia, fichiers) {
       el("div", { class: "capt-attente" }, el("span", { class: "capt-rond", "aria-hidden": "true" }), el("span", { id: "captEtat", text: "Claude regarde tes captures… (ça peut prendre jusqu'à une minute)" })),
       bouton("Arrêter", () => ctl.abort(), "mini gris"));
   }, { critique: true, onClose: () => { if (!fini) ctl.abort(); } });
-  ia.s.json(promptCapture(), { images: fichiers, signal: ctl.signal, cache: false })
-    .then(r => { fini = true; fe.fermer(); verifierImport(nettoyerImport(r)); })
+  ia.s.json(M.prompt(ctx), { images: fichiers, signal: ctl.signal, cache: false })
+    .then(r => { fini = true; fe.fermer(); M.fin(r, ctx); })
     .catch(e => {
       fini = true; fe.fermer();
       if (e?.code === "cancelled") return;
@@ -7040,7 +7060,7 @@ function analyserCaptures(ia, fichiers) {
         sampling_disabled: "Claude n'est pas disponible sur ce compte.",
         rate_limited: "Trop de demandes pour l'instant. Réessaie dans un moment.",
         image_rejected: "Cette image n'a pas pu être lue. Essaie avec une autre capture (PNG ou JPEG).",
-        invalid_json: "Je n'ai pas réussi à lire les matchs sur cette capture. Essaie avec une image plus nette.",
+        invalid_json: "Je n'ai pas réussi à lire cette capture. Essaie avec une image plus nette.",
         refused: "Claude n'a pas pu traiter cette image.",
         session_expired: "Reconnecte-toi à Claude puis réessaie."
       }[e?.code] || "Problème de connexion. Réessaie.";
@@ -7093,7 +7113,7 @@ function verifierImport({ matchs, remarque }) {
     feuille("Aucun match trouvé", corps => corps.append(
       el("p", { text: "Je n'ai pas trouvé de match sur cette capture." }),
       remarque ? el("p", { class: "aide", text: remarque }) : "",
-      bouton("📷 Essayer une autre capture", () => { fermerHaut(); lancerImportCapture(); }, "mini vert capt-gros")));
+      bouton("📷 Essayer une autre capture", () => { fermerHaut(); lancerImportCapture("matchs"); }, "mini vert capt-gros")));
     return;
   }
   feuille("Vérifie avant d'ajouter", (corps, f) => {
@@ -7584,6 +7604,7 @@ function chronologie(m) {
   return ev.sort((a, b) => (a.min == null) - (b.min == null) || (a.min || 0) - (b.min || 0));
 }
 function ficheMatchBas(corps, m) {
+  if (!aVenir(m)) corps.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("📸 Ajouter mes stats de ce match (capture)", () => lancerImportCapture("stats", { matchId: m.id }), "mini gris")));
   const ev = chronologie(m);
   if (ev.length) corps.append(el("div", { class: "carte lg" }, el("h3", { text: "🕒 Chronologie" }),
     el("ol", { class: "chrono" }, ev.map(e => el("li", { class: e.moi ? "moi" : "" }, el("span", { class: "chrono-min", text: e.min != null ? `${Math.floor(e.min)}'` : "–" }), el("span", { text: `${e.ico} ${e.txt}` }))))));
@@ -7630,6 +7651,7 @@ const COMPS_COUPE = new Set(["coupeNat", "coupeLigue", "coupeReg", "ldc", "europ
 const REGLES_DEF = { v: 3, n: 1, d: 0 };
 const reglesLigue = () => ({ ...REGLES_DEF, ...((ETAT.ligue && ETAT.ligue.regles) || {}) });
 // date du classement importé : seuls les matchs après cette date s'ajoutent
+const baseComplete = L => !L.base || Object.values(L.base).every(b => b.g != null && b.bp != null && b.bc != null);
 const dateBaseLigue = () => (ETAT.ligue && (ETAT.ligue.baseDate || (ETAT.ligue.importId === "u15-u14-2-2026-10-26" ? "2026-10-26" : ""))) || "";
 function equipeDeLigue(nom) {
   const L = ETAT.ligue; if (!L || !nom) return null;
@@ -7653,7 +7675,7 @@ function matchsLigue() {
 }
 function classementLigue(mode = "general", jusqua = null) {
   const L = ETAT.ligue, R = reglesLigue(), t = {};
-  L.equipes.forEach(n => { const b = mode === "general" ? (L.base || {})[n] || {} : {}; t[n] = { n, j: +b.j || 0, g: 0, nu: 0, p: 0, bp: 0, bc: 0, bd: +b.diff || 0, pts: +b.pts || 0 }; });
+  L.equipes.forEach(n => { const b = mode === "general" ? (L.base || {})[n] || {} : {}; const buts = b.bp != null && b.bc != null; t[n] = { n, j: +b.j || 0, g: +b.g || 0, nu: +b.n || 0, p: +b.p || 0, bp: buts ? +b.bp : 0, bc: buts ? +b.bc : 0, bd: buts ? 0 : +b.diff || 0, pts: +b.pts || 0 }; });
   const res = (X, pour, contre) => { X.j++; X.bp += pour; X.bc += contre; if (pour > contre) { X.g++; X.pts += R.v; } else if (pour < contre) { X.p++; X.pts += R.d; } else { X.nu++; X.pts += R.n; } };
   matchsLigue().forEach(m => {
     if (jusqua && (m.d || "") > jusqua) return;
@@ -7694,7 +7716,7 @@ function rendreCompetitions(v) {
 function blocChampionnat(v) {
   const L = ETAT.ligue;
   if (!L) {
-    v.append(carte("📊 Mon championnat", el("p", { class: "vide", text: "Crée ta ligue avec les équipes de ta poule : le classement se calcule ensuite tout seul à chaque résultat." }), bouton("＋ Créer mon championnat", () => { allerVue("ligue"); setTimeout(() => $("ligueCreer") && !$("ligueCreer").hidden && $("ligueCreer").click(), 300); }, "mini vert")));
+    v.append(carte("📊 Mon championnat", el("p", { class: "vide", text: "Crée ta ligue avec les équipes de ta poule : le classement se calcule ensuite tout seul à chaque résultat." }), el("div", { class: "rangee" }, bouton("📸 Avec une capture du classement", () => lancerImportCapture("classement"), "mini vert"), bouton("✏️ À la main", () => { allerVue("ligue"); setTimeout(() => $("ligueCreer") && !$("ligueCreer").hidden && $("ligueCreer").click(), 300); }, "mini gris"))));
     return;
   }
   const re = () => rendreVue();
@@ -7709,10 +7731,11 @@ function blocChampionnat(v) {
     el("div", { class: "carte-tete" }, el("div", {}, el("h2", { text: L.nom }), el("span", { class: "muted petit", text: [fmtSaison(saisonActuelle()), journee ? `Journée ${journee}` : null, pluriel(L.equipes.length, "équipe")].filter(Boolean).join(" · ") })), boutonFavori("comps", "ligue", L.nom)),
     moi ? el("div", { class: "ma-place" }, ecusson(L.moi, true), el("div", {}, el("b", { text: `${ma === 0 ? "1er 🥇" : ma + 1 + "e"} sur ${general.length}` }), el("span", { class: "muted petit", text: `${L.moi} · ${pluriel(moi.pts, "point")} · ${moi.g}V ${moi.nu}N ${moi.p}D` }))) : "",
     el("div", { class: "filtres", role: "group", "aria-label": "Type de classement" }, [["general", "Général"], ["dom", "Domicile"], ["ext", "Extérieur"], ["attaque", "Attaque"], ["defense", "Défense"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(modeClassement === k), onclick: () => { modeClassement = k; re(); } }, l))),
-    tableClassement(modeClassement === "attaque" ? [...general].sort((a, b) => b.bp - a.bp) : modeClassement === "defense" ? [...general].sort((a, b) => a.bc - b.bc) : rangs, L, modeClassement === "general" ? rangAvant : null, !!L.base && modeClassement === "general"),
-    L.base && modeClassement === "general" ? el("p", { class: "aide", text: "Le classement importé ne donne que les points, les matchs joués et la différence de buts : les victoires, nuls et buts détaillés sont dans les autres onglets (matchs enregistrés)." }) : "",
+    tableClassement(modeClassement === "attaque" ? [...general].sort((a, b) => b.bp - a.bp) : modeClassement === "defense" ? [...general].sort((a, b) => a.bc - b.bc) : rangs, L, modeClassement === "general" ? rangAvant : null, !baseComplete(L) && modeClassement === "general"),
+    !baseComplete(L) && modeClassement === "general" ? el("p", { class: "aide", text: "Le classement importé ne donne que les points, les matchs joués et la différence de buts : les victoires, nuls et buts détaillés sont dans les autres onglets (matchs enregistrés)." }) : "",
     L.base && modeClassement !== "general" ? el("p", { class: "aide", text: `Le classement importé ne détaille pas domicile / extérieur ni les buts : ici ne comptent que les matchs enregistrés depuis le ${court(dateBaseLigue()) || "début"}.` }) : "",
     el("p", { class: "aide", text: `Victoire ${reglesLigue().v} pts · nul ${reglesLigue().n} · défaite ${reglesLigue().d}. En cas d'égalité : différence de buts, puis buts marqués.` }),
+    el("div", { class: "rangee" }, bouton("📸 Classement", () => lancerImportCapture("classement"), "mini gris"), bouton("📸 Résultats", () => lancerImportCapture("resultats"), "mini gris")),
     el("div", { class: "rangee" }, bouton("＋ Résultat", () => { allerVue("ligue"); setTimeout(() => $("ajoutMatch") && $("ajoutMatch").click(), 300); }, "mini vert"), bouton("⚙️ Règles", feuilleRegles, "mini gris"), bouton("✏️ Équipes", () => { allerVue("ligue"); setTimeout(() => $("ligueReglages") && $("ligueReglages").click(), 300); }, "mini gris"))));
   // évolution de mon équipe journée après journée
   if (dates.length >= 2 && ma >= 0) {
@@ -7790,7 +7813,7 @@ function blocCoupes(v) {
   if (ETAT.coupes.length) v.append(carte(el("div", { class: "carte-tete" }, el("h2", { text: "🥇 Mes coupes" }), bouton("Gérer", () => allerVue("coupes"), "mini gris")),
     el("ul", { class: "liste" }, ETAT.coupes.map(c => el("li", {}, el("div", { class: "item" }, el("span", { class: "i-ico", text: c.res === "gagne" ? "🏆" : c.res === "encours" ? "⏳" : "🥇" }), el("span", { class: "i-txt" }, el("b", { text: c.nom }), el("span", { text: [c.saison, RES_COUPE[c.res], c.buts ? `⚽ ${c.buts}` : null].filter(Boolean).join(" · ") }))))))));
   if (!groupes.length && !ETAT.coupes.length) {
-    v.append(carte("🏆 Mes coupes", el("p", { class: "vide", text: "Aucun match de coupe pour l'instant. Choisis « Coupe… » ou « Tournoi » comme compétition dans un match, avec son tour (16e, quart, finale…) : ton parcours s'affichera ici." }), bouton("＋ Match de coupe", () => editerMatch(null), "mini vert")));
+    v.append(carte("🏆 Mes coupes", el("p", { class: "vide", text: "Aucun match de coupe pour l'instant. Choisis « Coupe… » ou « Tournoi » comme compétition dans un match, avec son tour (16e, quart, finale…) : ton parcours s'affichera ici." }), el("div", { class: "rangee" }, bouton("＋ Match de coupe", () => editerMatch(null), "mini vert"), bouton("📸 Capture", () => lancerImportCapture("matchs"), "mini gris"))));
     return;
   }
   groupes.forEach(g => {
@@ -8177,6 +8200,167 @@ function blocsReglagesPlus(box) {
       el("li", { text: "Respecte les autres dans les messages d'équipe. Tout message peut être signalé." }),
       el("li", { text: "Ne partage pas tes données personnelles (adresse, téléphone) dans l'appli." }))),
     el("p", { class: "aide", text: "Tes données sont enregistrées sur ton compte Claude, privées. Rien n'est vendu ni partagé." })));
+}
+
+// =====================================================================
+//  CAPTURES D'ÉCRAN PARTOUT : matchs, classement de la ligue, résultats
+//  de la ligue, statistiques d'un match. Claude lit l'image, le joueur
+//  vérifie et corrige, puis tout est enregistré.
+// =====================================================================
+const MODES_CAPTURE = {
+  matchs: { ico: "⚽", titre: "Mes matchs et résultats", aide: "Feuille de match, résultats, calendrier, appli du club…",
+    explication: "Prends une capture de tes résultats ou de ton calendrier (appli du club, feuille de match, site du district…) : je recrée tes matchs, buts et passes. Les matchs sans score deviennent des matchs à venir.",
+    prompt: () => promptCapture(), fin: r => verifierImport(nettoyerImport(r)) },
+  classement: { ico: "📊", titre: "Classement de ma ligue", aide: "Le tableau du classement de ta poule",
+    explication: "Prends une capture du classement de ta poule (myFFF, site du district…) : je remplis ton championnat avec toutes les équipes, leurs points et leurs buts.",
+    prompt: () => promptClassement(), fin: r => verifierClassement(r) },
+  resultats: { ico: "🗓️", titre: "Résultats de la ligue", aide: "Les scores d'une journée, même entre les autres équipes",
+    explication: "Prends une capture des résultats d'une journée : j'ajoute tous les scores à ton championnat et le classement se met à jour.",
+    prompt: () => promptResultats(), fin: r => verifierResultats(r) },
+  stats: { ico: "📈", titre: "Statistiques d'un match", aide: "Tirs, passes, km, vitesse… (montre, appli de stats)",
+    explication: "Prends une capture de tes statistiques d'un match (montre connectée, appli de stats, fiche du coach) : je les ajoute à la fiche du match.",
+    prompt: () => promptStats(), fin: (r, ctx) => verifierStats(r, ctx) }
+};
+const dateOk = d => (/^\d{4}-\d{2}-\d{2}$/.test(String(d || "")) ? String(d) : "");
+const texteCourt = (x, n = 50) => (x == null ? "" : String(x).trim().slice(0, n));
+const enteteIA = () => `Aujourd'hui nous sommes le ${aujourdHui()}. Si une date n'a pas d'année, choisis l'année la plus récente qui ne soit pas dans le futur.
+N'écris que ce qui est réellement visible sur les images : n'invente rien, mets null quand une valeur n'est pas écrite.`;
+
+// ---------- Classement ----------
+function promptClassement() {
+  const L = ETAT.ligue;
+  return `Tu lis une ou plusieurs captures d'écran du classement d'un championnat de football de jeunes (poule, district, myFFF…).
+${enteteIA()}
+L'équipe du joueur s'appelle probablement : ${[ETAT.profil.club, L && L.moi].filter(Boolean).join(" ou ") || "inconnue"}.
+Relève TOUTES les équipes dans l'ordre du classement, avec : nom, pts (points), j (matchs joués), g (gagnés), n (nuls), p (perdus), bp (buts pour), bc (buts contre), diff (différence de buts). Mets null pour une colonne absente.
+Réponds UNIQUEMENT avec ce JSON :
+{"nom":"nom de la poule ou du championnat si écrit, sinon null","date":"AAAA-MM-JJ si la date du classement est écrite, sinon null","equipes":[{"nom":"Moirans FC","pts":12,"j":4,"g":4,"n":0,"p":0,"bp":20,"bc":4,"diff":16}],"remarque":"phrase courte si quelque chose n'était pas lisible, sinon null"}
+S'il n'y a pas de classement sur les images, réponds {"equipes":[],"remarque":"ce que montrent les images"}.`;
+}
+function equipeQuiEstMoi(noms) {
+  const cands = [ETAT.ligue && ETAT.ligue.moi, ETAT.profil.club, ...clubsConnus()].filter(Boolean);
+  for (const c of cands) { const n = noms.find(x => cleClub(x) === cleClub(c)); if (n) return n; }
+  for (const c of cands) { const n = noms.find(x => baseClub(x) && baseClub(x) === baseClub(c)); if (n) return n; }
+  return noms[0] || "";
+}
+function verifierClassement(r) {
+  const eqs = (Array.isArray(r && r.equipes) ? r.equipes : []).slice(0, 30).filter(e => e && e.nom).map(e => {
+    const o = { nom: texteCourt(e.nom, 50) };
+    ["pts", "j", "g", "n", "p", "bp", "bc"].forEach(k => { const x = num(e[k]); o[k] = x == null ? null : Math.max(0, Math.round(x)); });
+    const d = num(e.diff); o.diff = d == null ? (o.bp != null && o.bc != null ? o.bp - o.bc : null) : Math.round(d);
+    return o;
+  }).filter((e, i, l) => l.findIndex(x => cleClub(x.nom) === cleClub(e.nom)) === i);
+  const remarque = r && typeof r.remarque === "string" ? r.remarque.slice(0, 300) : "";
+  if (eqs.length < 2) { feuille("Aucun classement trouvé", corps => corps.append(el("p", { text: "Je n'ai pas trouvé de classement sur cette capture." }), remarque ? el("p", { class: "aide", text: remarque }) : "", bouton("📷 Essayer une autre capture", () => { fermerHaut(); lancerImportCapture("classement"); }, "mini vert capt-gros"))); return; }
+  const noms = eqs.map(e => e.nom);
+  const etat = { nom: texteCourt(r.nom, 60) || (ETAT.ligue && ETAT.ligue.nom) || "Mon championnat", moi: equipeQuiEstMoi(noms), date: dateOk(r.date) || aujourdHui() };
+  feuille("Vérifie le classement", (corps, f) => {
+    const nomI = el("input", { class: "champ", type: "text", value: etat.nom, maxlength: "60" }); nomI.addEventListener("input", () => { etat.nom = nomI.value.trim(); });
+    const moiS = el("select", { class: "champ" }, noms.map(n => el("option", { value: n, text: n }))); moiS.value = etat.moi; moiS.addEventListener("change", () => { etat.moi = moiS.value; });
+    const dateI = el("input", { class: "champ", type: "date", value: etat.date }); dateI.addEventListener("input", () => { etat.date = dateI.value; });
+    const t = el("table", {}, el("thead", {}, el("tr", {}, ["#", "Équipe", "Pts", "J", "G", "N", "P", "BP", "BC", "Diff"].map(h => el("th", { text: h })))),
+      el("tbody", {}, eqs.map((e, i) => el("tr", {}, el("td", { text: String(i + 1) }), el("td", { class: "eq", text: e.nom }), ...["pts", "j", "g", "n", "p", "bp", "bc", "diff"].map(k => el("td", { text: e[k] == null ? "–" : String(e[k]) }))))));
+    corps.append(el("p", { text: `J'ai lu ${pluriel(eqs.length, "équipe")}.` }), remarque ? el("p", { class: "aide", text: "ℹ️ " + remarque }) : "",
+      el("div", { class: "tableau" }, t),
+      el("label", { class: "ch" }, "Nom du championnat", nomI), el("label", { class: "ch" }, "Mon équipe", moiS), el("label", { class: "ch" }, "Date du classement", dateI),
+      el("p", { class: "aide", text: ETAT.ligue ? `Remplace le classement de « ${ETAT.ligue.nom} ». Tes matchs joués après cette date continuent de s'ajouter tout seuls.` : "Crée ton championnat. Tes matchs de championnat joués après cette date s'ajouteront tout seuls au classement." }),
+      bouton("✅ Enregistrer le classement", () => {
+        if (!etat.date) { toast("Indique la date du classement.", 3000); return; }
+        const base = {}; eqs.forEach(e => { base[e.nom] = { pts: e.pts || 0, j: e.j || 0, diff: e.diff || 0, ...(e.g != null ? { g: e.g, n: e.n || 0, p: e.p || 0 } : {}), ...(e.bp != null && e.bc != null ? { bp: e.bp, bc: e.bc } : {}) }; });
+        const ancien = ETAT.ligue;
+        const nomDe = x => noms.find(n => cleClub(n) === cleClub(x)) || noms.find(n => baseClub(n) && baseClub(n) === baseClub(x)) || null;
+        const matchs = ancien ? ancien.matchs.filter(m => (m.d || "") > etat.date).map(m => ({ ...m, a: nomDe(m.a), b: nomDe(m.b) })).filter(m => m.a && m.b) : [];
+        ETAT.ligue = { nom: etat.nom || "Mon championnat", moi: etat.moi, equipes: noms, matchs, base, baseDate: etat.date, importId: "capture-" + etat.date, ...(ancien && ancien.regles ? { regles: ancien.regles } : {}), ...(ancien && ancien.auto === false ? { auto: false } : {}) };
+        delete ETAT.profil.rangVu;
+        noter("Modifié", `Classement importé d'une capture (${pluriel(noms.length, "équipe")})`);
+        sauver(); f.fermer(); ongletComp = "champ"; allerVue("competitions"); toast("📊 Classement mis à jour ✅", 4000);
+      }, "mini vert capt-gros"));
+  });
+}
+
+// ---------- Résultats de la ligue ----------
+function promptResultats() {
+  return `Tu lis une ou plusieurs captures d'écran de résultats de matchs de football de jeunes (une journée de championnat, myFFF, site du district…).
+${enteteIA()}
+Relève chaque match qui a un score : équipe qui reçoit (dom), équipe qui se déplace (ext), buts de chacune (sd, se), date.
+Réponds UNIQUEMENT avec ce JSON :
+{"matchs":[{"dom":"Moirans FC","ext":"Voreppe FC","sd":2,"se":1,"d":"2026-11-14"}],"remarque":"phrase courte si quelque chose n'était pas lisible, sinon null"}
+S'il n'y a aucun résultat, réponds {"matchs":[],"remarque":"ce que montrent les images"}.`;
+}
+function verifierResultats(r) {
+  const L = ETAT.ligue;
+  if (!L) { feuille("Crée d'abord ton championnat", corps => corps.append(el("p", { text: "Pour ajouter des résultats, il faut d'abord les équipes de ta poule. Le plus rapide : une capture du classement." }), bouton("📊 Capture du classement", () => { fermerHaut(); lancerImportCapture("classement"); }, "mini vert capt-gros"))); return; }
+  const remarque = r && typeof r.remarque === "string" ? r.remarque.slice(0, 300) : "";
+  const res = (Array.isArray(r && r.matchs) ? r.matchs : []).slice(0, 30).filter(m => m && m.dom && m.ext && num(m.sd) != null && num(m.se) != null).map(m => {
+    const a = equipeDeLigue(m.dom), b = equipeDeLigue(m.ext), d = dateOk(m.d) || aujourdHui();
+    const x = { lu: `${texteCourt(m.dom)} ${m.sd}-${m.se} ${texteCourt(m.ext)}`, a: a || "", b: b || "", sa: Math.max(0, Math.round(num(m.sd))), sb: Math.max(0, Math.round(num(m.se))), d };
+    x.deja = !!(a && b && matchsLigue().some(y => y.d === d && [y.a, y.b].includes(a) && [y.a, y.b].includes(b)));
+    x.avantBase = !!(dateBaseLigue() && d <= dateBaseLigue());
+    x.garder = !!(a && b && a !== b && !x.deja && !x.avantBase);
+    return x;
+  });
+  if (!res.length) { feuille("Aucun résultat trouvé", corps => corps.append(el("p", { text: "Je n'ai pas trouvé de score sur cette capture." }), remarque ? el("p", { class: "aide", text: remarque }) : "", bouton("📷 Essayer une autre capture", () => { fermerHaut(); lancerImportCapture("resultats"); }, "mini vert capt-gros"))); return; }
+  feuille("Vérifie les résultats", (corps, f) => {
+    const opts = [["", "— Équipe ?"], ...L.equipes.map(n => [n, n])];
+    const sel = (x, k) => { const s = el("select", { class: "champ" }, opts.map(([v, t]) => el("option", { value: v, text: t }))); s.value = x[k]; s.addEventListener("change", () => { x[k] = s.value; }); return s; };
+    corps.append(el("p", { text: "Voici les scores lus. Choisis l'équipe quand je ne l'ai pas reconnue, décoche ce qui est faux." }), remarque ? el("p", { class: "aide", text: "ℹ️ " + remarque }) : "");
+    res.forEach(x => {
+      const coche = el("input", { type: "checkbox" }); coche.checked = x.garder;
+      const boite = el("div", { class: "carte lg capt-carte" + (x.garder ? "" : " capt-off") });
+      coche.addEventListener("change", () => { x.garder = coche.checked; boite.classList.toggle("capt-off", !x.garder); });
+      const sc = (k) => { const i = el("input", { type: "number", min: "0", max: "99", inputmode: "numeric", value: String(x[k]) }); i.addEventListener("input", () => { x[k] = Math.max(0, +i.value || 0); }); return i; };
+      const dI = el("input", { type: "date", value: x.d }); dI.addEventListener("input", () => { x.d = dI.value; });
+      boite.append(el("label", { class: "capt-tete" }, coche, el("b", { text: x.lu })),
+        x.deja ? el("p", { class: "aide capt-alerte", text: "Déjà compté dans le classement : décoché." }) : x.avantBase ? el("p", { class: "aide capt-alerte", text: "Joué avant la date du classement importé (déjà compté dedans) : décoché." }) : (!x.a || !x.b) ? el("p", { class: "aide capt-alerte", text: "Équipe pas reconnue : choisis-la dans la liste." }) : "",
+        el("div", { class: "capt-grille" },
+          el("label", { class: "capt-champ" }, el("span", { text: "Domicile" }), sel(x, "a")), el("label", { class: "capt-champ" }, el("span", { text: "Extérieur" }), sel(x, "b")),
+          el("label", { class: "capt-champ" }, el("span", { text: "Buts domicile" }), sc("sa")), el("label", { class: "capt-champ" }, el("span", { text: "Buts extérieur" }), sc("sb")),
+          el("label", { class: "capt-champ" }, el("span", { text: "Date" }), dI)));
+      corps.append(boite);
+    });
+    corps.append(bouton("✅ Ajouter au championnat", () => {
+      const g = res.filter(x => x.garder);
+      if (g.some(x => !x.a || !x.b || x.a === x.b)) { toast("Choisis deux équipes différentes pour chaque résultat coché.", 4000); return; }
+      g.forEach(x => ETAT.ligue.matchs.push({ id: uid(), a: x.a, b: x.b, sa: x.sa, sb: x.sb, d: x.d || aujourdHui() }));
+      noter("Ajouté", `Résultats de la ligue importés d'une capture (${pluriel(g.length, "match")})`);
+      sauver(); f.fermer(); ongletComp = "champ"; allerVue("competitions"); toast(`🗓️ ${pluriel(g.length, "résultat")} ajouté${g.length > 1 ? "s" : ""} ✅`, 4000);
+    }, "mini vert capt-gros"));
+  });
+}
+
+// ---------- Statistiques d'un match ----------
+const CHAMPS_STATS = [["min", "Minutes jouées", 130], ["note", "Note /10", 10], ["tirs", "Tirs", 60], ["tirsCadres", "Tirs cadrés", 60], ["passesOk", "Passes réussies", 300], ["passesTot", "Passes tentées", 300], ["passesCles", "Passes clés", 50], ["occCreees", "Occasions créées", 50], ["grossesOcc", "Grosses occasions", 50], ["dribbles", "Dribbles réussis", 60], ["duels", "Duels gagnés", 80], ["distance", "Distance (km)", 20], ["vmax", "Vitesse max (km/h)", 45], ["xg", "xG", 10], ["xa", "xA", 10]];
+function promptStats() {
+  return `Tu lis une ou plusieurs captures d'écran des statistiques individuelles d'un jeune footballeur sur un match (montre connectée, appli de stats, fiche du coach…).
+${enteteIA()}
+Relève seulement les valeurs écrites : min (minutes jouées), note (sur 10), tirs, tirsCadres, passesOk (passes réussies), passesTot (passes tentées), passesCles, occCreees (occasions créées), grossesOcc, dribbles (réussis), duels (gagnés), distance (en km, convertis les mètres), vmax (vitesse max en km/h), xg, xa, et si elles sont écrites la date du match (d) et l'adversaire (adv).
+Réponds UNIQUEMENT avec ce JSON :
+{"d":null,"adv":null,"stats":{"min":70,"tirs":4,"tirsCadres":2,"distance":6.3,"vmax":27.5},"remarque":"phrase courte si quelque chose n'était pas lisible, sinon null"}`;
+}
+function verifierStats(r, ctx) {
+  const st = (r && r.stats && typeof r.stats === "object") ? r.stats : {};
+  const lu = {};
+  CHAMPS_STATS.forEach(([k, , max]) => { const x = num(st[k]); if (x != null && x >= 0 && x <= max) lu[k] = Math.round(x * 100) / 100; });
+  const remarque = r && typeof r.remarque === "string" ? r.remarque.slice(0, 300) : "";
+  if (!Object.keys(lu).length) { feuille("Aucune statistique trouvée", corps => corps.append(el("p", { text: "Je n'ai pas trouvé de statistiques sur cette capture." }), remarque ? el("p", { class: "aide", text: remarque }) : "", bouton("📷 Essayer une autre capture", () => { fermerHaut(); lancerImportCapture("stats", ctx); }, "mini vert capt-gros"))); return; }
+  const joues = matchsTries().filter(m => !aVenir(m) || enDirect(m));
+  if (!joues.length) { toast("Ajoute d'abord le match, puis importe ses statistiques.", 5000); return; }
+  const d = dateOk(r.d), adv = texteCourt(r.adv);
+  const devine = (ctx && ctx.matchId && IDX[ctx.matchId]) || joues.find(m => d && m.d === d) || joues.find(m => adv && cleClub(m.adv) === cleClub(adv)) || joues[0];
+  const etat = { matchId: devine.id };
+  feuille("Vérifie les statistiques", (corps, f) => {
+    const selM = el("select", { class: "champ" }, joues.slice(0, 60).map(m => el("option", { value: m.id, text: matchLabel(m) }))); selM.value = etat.matchId; selM.addEventListener("change", () => { etat.matchId = selM.value; });
+    const grille = el("div", { class: "capt-grille" }, CHAMPS_STATS.filter(([k]) => lu[k] != null).map(([k, l]) => { const i = el("input", { type: "number", min: "0", step: "any", inputmode: "decimal", value: String(lu[k]) }); i.addEventListener("input", () => { const x = num(i.value); if (x == null) delete lu[k]; else lu[k] = x; }); return el("label", { class: "capt-champ" }, el("span", { text: l }), i); }));
+    corps.append(el("p", { text: `J'ai lu ${pluriel(Object.keys(lu).length, "statistique")}.` }), remarque ? el("p", { class: "aide", text: "ℹ️ " + remarque }) : "",
+      el("label", { class: "ch" }, "Pour le match", selM), grille,
+      el("p", { class: "aide", text: "Ces chiffres remplacent ceux déjà notés pour ce match (les autres ne bougent pas)." }),
+      bouton("✅ Ajouter au match", () => {
+        const m = ETAT.matchs.find(x => x.id === etat.matchId); if (!m) return;
+        Object.assign(m, lu);
+        noter("Modifié", `Statistiques importées d'une capture · ${matchLabel(m)}`);
+        sauver(); f.fermer(); toutRafraichir(); ficheMatch(m.id); toast("📈 Statistiques ajoutées ✅", 4000);
+      }, "mini vert capt-gros"));
+  });
 }
 
 // =====================================================================
