@@ -7013,7 +7013,9 @@ function fichiersCapture(max, rappel) {
 
 // mode : "matchs", "classement", "resultats" ou "stats" (voir 22-captures.js) ; sans mode, on demande quoi importer
 async function lancerImportCapture(mode, ctx) {
-  const ia = await obtenirLecteurIA();
+  let ia = await obtenirLecteurIA();
+  // sans Claude (site installé, ou Claude indisponible) : lecteur intégré au téléphone
+  if (!ia && ocrPossible()) ia = { ocr: true, lim: { maxCount: 3 } };
   if (!ia) {
     feuille("Importer une capture", corps => {
       corps.append(el("p", { text: "📸 Cette fonction utilise Claude pour lire tes captures d'écran." }),
@@ -7028,7 +7030,8 @@ async function lancerImportCapture(mode, ctx) {
       corps.append(el("p", { text: "📸 Qu'est-ce qu'il y a sur ta capture ?" }),
         el("div", { class: "capt-modes" }, Object.entries(MODES_CAPTURE).map(([k, x]) => el("button", { class: "carte lg capt-mode", type: "button", onclick: () => choisir(k, f) },
           el("span", { class: "capt-mode-ico", "aria-hidden": "true", text: x.ico }), el("span", { class: "i-txt" }, el("b", { text: x.titre }), el("span", { class: "muted petit", text: x.aide })), el("span", { class: "chev", "aria-hidden": "true", text: "›" })))),
-        el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Rien n'est ajouté avant que tu aies vérifié.` }));
+        el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Rien n'est ajouté avant que tu aies vérifié.` }),
+        ia.ocr ? el("p", { class: "aide", text: "🤖 Lecteur intégré au téléphone (sans Claude) : il lit le texte de l'image. Les captures nettes, bien droites, avec le tableau entier, marchent le mieux. La première fois, il se télécharge (il faut internet)." }) : "");
     });
     return;
   }
@@ -7036,11 +7039,13 @@ async function lancerImportCapture(mode, ctx) {
   feuille(x.titre, (corps, f) => {
     corps.append(el("p", { text: `${x.ico} ${x.explication || x.aide}` }),
       el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Tu vérifies tout avant que ce soit enregistré.` }),
-      bouton("📷 Choisir mes captures", () => choisir(mode, f), "mini vert capt-gros"));
+      bouton("📷 Choisir mes captures", () => choisir(mode, f), "mini vert capt-gros"),
+      ia.ocr ? el("p", { class: "aide", text: "🤖 Lecteur intégré au téléphone (sans Claude). Les captures nettes avec le tableau entier marchent le mieux. La première fois, il se télécharge (il faut internet)." }) : "");
   });
 }
 
 function analyserCaptures(ia, fichiers, mode = "matchs", ctx) {
+  if (ia.ocr) return analyserOCR(fichiers, mode, ctx);
   const M = MODES_CAPTURE[mode] || MODES_CAPTURE.matchs;
   const ctl = new AbortController();
   let fini = false;
@@ -7055,6 +7060,12 @@ function analyserCaptures(ia, fichiers, mode = "matchs", ctx) {
     .catch(e => {
       fini = true; fe.fermer();
       if (e?.code === "cancelled") return;
+      // Claude ne peut pas lire l'image ici : on passe au lecteur intégré du téléphone
+      if (e?.code !== "rate_limited" && ocrPossible()) {
+        if (["not_granted", "sampling_disabled", "images_unavailable", "not_declared"].includes(e?.code)) lecteurIA = null;
+        toast("Claude ne peut pas lire l'image : j'utilise le lecteur intégré du téléphone.", 4000);
+        analyserOCR(fichiers, mode, ctx); return;
+      }
       const msg = {
         not_granted: "Tu as refusé l'accès à Claude. Tu peux le réactiver dans les autorisations de l'appli.",
         sampling_disabled: "Claude n'est pas disponible sur ce compte.",
@@ -8361,6 +8372,270 @@ function verifierStats(r, ctx) {
         sauver(); f.fermer(); toutRafraichir(); ficheMatch(m.id); toast("📈 Statistiques ajoutées ✅", 4000);
       }, "mini vert capt-gros"));
   });
+}
+
+// =====================================================================
+//  LECTEUR INTÉGRÉ (sans Claude) : reconnaissance de texte sur le
+//  téléphone (Tesseract, gratuit, aucune clé secrète), puis l'appli
+//  comprend le texte : classement, résultats, matchs, statistiques.
+//  Utilisé quand l'IA de Claude n'est pas disponible (site installé).
+//  Le résultat passe toujours par l'écran de vérification.
+// =====================================================================
+const TESSERACT_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+let promesseTesseract = null;
+function chargerTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  if (promesseTesseract) return promesseTesseract;
+  promesseTesseract = new Promise((ok, ko) => {
+    const s = document.createElement("script");
+    s.src = TESSERACT_URL; s.async = true;
+    s.onload = () => window.Tesseract ? ok(window.Tesseract) : ko(new Error("tesseract"));
+    s.onerror = () => { promesseTesseract = null; ko(new Error("reseau")); };
+    document.head.append(s);
+  });
+  return promesseTesseract;
+}
+const ocrPossible = () => typeof WebAssembly === "object" && typeof Worker === "function";
+
+// image → canevas en gris, inversé si l'écran est sombre (le texte clair sur fond foncé se lit mal), agrandi si petit
+function preparerImage(fichier) {
+  return new Promise((ok, ko) => {
+    const u = URL.createObjectURL(fichier), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(u);
+      const k = img.width < 1000 ? 2 : 1;
+      const c = document.createElement("canvas"); c.width = img.width * k; c.height = img.height * k;
+      const g = c.getContext("2d"); g.drawImage(img, 0, 0, c.width, c.height);
+      const d = g.getImageData(0, 0, c.width, c.height), px = d.data;
+      let somme = 0;
+      for (let i = 0; i < px.length; i += 4) { const y = .299 * px[i] + .587 * px[i + 1] + .114 * px[i + 2]; px[i] = px[i + 1] = px[i + 2] = y; somme += y; }
+      if (somme / (px.length / 4) < 128) for (let i = 0; i < px.length; i += 4) px[i] = px[i + 1] = px[i + 2] = 255 - px[i];
+      g.putImageData(d, 0, 0);
+      ok(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); ko(new Error("image")); };
+    img.src = u;
+  });
+}
+
+async function lireTexteImages(fichiers, progres) {
+  const T = await chargerTesseract();
+  let worker;
+  const log = m => { if (m && m.status && progres) progres(m.status, m.progress || 0); };
+  try { worker = await T.createWorker("fra", 1, { logger: log }); }
+  catch (e) { worker = await T.createWorker("eng", 1, { logger: log }); }
+  try {
+    await worker.setParameters({ preserve_interword_spaces: "1" }).catch(() => {});
+    let txt = "";
+    for (let i = 0; i < fichiers.length; i++) {
+      progres && progres(`image ${i + 1}/${fichiers.length}`, 0);
+      const c = await preparerImage(fichiers[i]);
+      const r = await worker.recognize(c);
+      txt += "\n" + (r && r.data && r.data.text || "");
+    }
+    return txt;
+  } finally { worker.terminate().catch(() => {}); }
+}
+
+// ---------- outils de lecture du texte ----------
+const MOIS_FR = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
+const sansAccent = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "");
+function lignesTexte(txt) {
+  return String(txt || "").split(/\r?\n/).map(l => l.replace(/[|\[\]{}«»"“”_]/g, " ").replace(/[–—]/g, "-").replace(/\s+/g, " ").trim()).filter(l => l.length > 1);
+}
+const nombreOCR = t => { let x = String(t).replace(/^[oO]$/, "0").replace(/^[lI]$/, "1"); if (/\d/.test(x) && x.length <= 5) x = x.replace(/[^\d+-]/g, ""); return /^[+-]?\d{1,3}$/.test(x) ? parseInt(x, 10) : null; };
+// « 311 » peut être « 3 1 1 » collés par la lecture : on essaie les deux
+function variantesNombres(toks) {
+  let vars = [[]];
+  toks.forEach(t => {
+    const n = nombreOCR(t), brut = String(n);
+    const options = [[n]];
+    if (n >= 10 && !/^[+-]/.test(brut)) { options.push(brut.split("").map(Number)); if (brut.length === 3) { options.push([+brut[0], +brut.slice(1)]); options.push([+brut.slice(0, 2), +brut[2]]); } }
+    const nv = []; vars.forEach(v => options.forEach(o => { if (nv.length < 256) nv.push(v.concat(o)); })); vars = nv;
+  });
+  return vars;
+}
+function dateDansLigne(l) {
+  const a = aujourdHui(), annee = +a.slice(0, 4);
+  const fin = (j, m, y) => {
+    if (!(j >= 1 && j <= 31 && m >= 1 && m <= 12)) return "";
+    let an = y ? (y < 100 ? 2000 + y : y) : annee;
+    const iso = an2 => `${an2}-${String(m).padStart(2, "0")}-${String(j).padStart(2, "0")}`;
+    if (y) return iso(an);
+    // sans année : l'année qui met la date le plus près d'aujourd'hui (calendrier à venir ou résultats passés)
+    const ecart = an2 => Math.abs(dateObj(iso(an2)) - dateObj(a));
+    return [an - 1, an, an + 1].sort((u, v) => ecart(u) - ecart(v))[0] === an - 1 ? iso(an - 1) : ecart(an + 1) < ecart(an) ? iso(an + 1) : iso(an);
+  };
+  let r = /(?<!\d)(\d{1,2})[/.](\d{1,2})(?:[/.](\d{2,4}))?(?!\d)/.exec(l);
+  if (r) return fin(+r[1], +r[2], r[3] ? +r[3] : 0);
+  r = new RegExp(`\\b(\\d{1,2})(?:er)?\\s+(${MOIS_FR.join("|")})\\.?(?:\\s+(\\d{4}))?`, "i").exec(sansAccent(l));
+  if (r) return fin(+r[1], MOIS_FR.indexOf(r[2].toLowerCase()) + 1, r[3] ? +r[3] : 0);
+  return "";
+}
+const heureDansLigne = l => { const r = /\b(\d{1,2})\s?[h:]\s?(\d{2})\b/i.exec(l); return r && +r[1] < 24 ? `${r[1].padStart(2, "0")}:${r[2]}` : ""; };
+const aDesLettres = s => /[a-zA-ZÀ-ÿ]{2,}/.test(s || "");
+const nettoyerNom = s => String(s || "").replace(/^[^a-zA-ZÀ-ÿ0-9]+|[^a-zA-ZÀ-ÿ0-9)]+$/g, "").replace(/\s+/g, " ").trim().slice(0, 50);
+// ressemblance entre deux noms (0 à 1), pour corriger les petites erreurs de lecture
+function ressemblance(a, b) {
+  a = cleClub(a).replace(/ /g, ""); b = cleClub(b).replace(/ /g, ""); if (!a || !b) return 0; if (a === b) return 1;
+  const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return 1 - d[m][n] / Math.max(m, n);
+}
+function nomLePlusProche(nom, liste, seuil = .72) {
+  let best = null, s = 0;
+  liste.forEach(x => { const r = Math.max(ressemblance(nom, x), baseClub(nom) && baseClub(nom) === baseClub(x) ? .95 : 0); if (r > s) { s = r; best = x; } });
+  return s >= seuil ? best : null;
+}
+const mesNomsDeClub = () => [ETAT.profil.club, ETAT.ligue && ETAT.ligue.moi, ...clubsConnus()].filter(Boolean);
+const estMonClub = nom => !!nomLePlusProche(nom, mesNomsDeClub(), .78);
+
+// ---------- Classement ----------
+const ORDRES_CLASSEMENT = [
+  ["pts", "j", "g", "n", "p", "bp", "bc", "diff"], ["pts", "j", "g", "n", "p", "f", "bp", "bc", "pe", "diff"], ["pts", "j", "g", "n", "p", "f", "bp", "bc", "diff"],
+  ["pts", "j", "g", "n", "p", "bp", "bc", "pe", "diff"], ["j", "g", "n", "p", "bp", "bc", "diff", "pts"], ["pts", "j", "g", "n", "p", "bp", "bc"], ["pts", "j", "g", "n", "p", "diff"],
+  ["pts", "j", "g", "n", "p"], ["pts", "j", "diff"], ["pts", "j"]
+];
+function noteLigne(o) {
+  let s = 0;
+  if (o.j != null && o.g != null && o.n != null && o.p != null) s += o.g + o.n + o.p === o.j ? 4 : -4;
+  if (o.bp != null && o.bc != null && o.diff != null) s += o.bp - o.bc === o.diff ? 4 : -4;
+  if (o.pts != null && o.g != null && o.n != null) s += [3 * o.g + o.n, 4 * o.g + 2 * o.n + (o.p || 0), 3 * o.g + 2 * o.n + (o.p || 0), 3 * o.g + o.n + (o.p || 0)].includes(o.pts) ? 3 : -1;
+  if (o.pts != null && o.j != null && o.pts > 4 * o.j + 1) s -= 3;
+  return s;
+}
+function lireClassementTexte(txt) {
+  const L = lignesTexte(txt), equipes = [];
+  let date = "", nom = "";
+  L.forEach(l => {
+    if (!date) date = dateDansLigne(l);
+    if (!nom && /poule|division|district|championnat|\bD\d\b|\bU1\d\b|\bR\d\b/i.test(l) && !/\d+\s+\d+\s+\d+/.test(l)) nom = nettoyerNom(l);
+    const toks = l.split(" ");
+    let i = toks.length; const brutes = [];
+    while (i > 0 && nombreOCR(toks[i - 1]) != null) { brutes.unshift(toks[i - 1]); i--; }
+    if (brutes.length < 2) return;
+    let nomToks = toks.slice(0, i);
+    if (nomToks.length > 1 && /^\d{1,2}(?:[.)e]|er)?$/.test(nomToks[0])) nomToks = nomToks.slice(1);
+    if (!aDesLettres(nomToks.join(" "))) return;
+    let meilleur = null;
+    variantesNombres(brutes).forEach((nums, vi) => {
+    for (let k = 0; k <= Math.min(2, nums.length - 2); k++) {
+      const vals = nums.slice(k);
+      ORDRES_CLASSEMENT.filter(o => o.length === vals.length).forEach(ord => {
+        const o = {}; ord.forEach((c, x) => { o[c] = vals[x]; });
+        const sc = noteLigne(o) - k * 1.5 + ord.length * .1 - (vi ? .5 : 0);
+        if (!meilleur || sc > meilleur.sc) meilleur = { sc, o, nomPlus: nums.slice(0, k) };
+      });
+    }
+    });
+    if (!meilleur) return;
+    const n = nettoyerNom([...nomToks, ...meilleur.nomPlus].join(" "));
+    if (!n || /^(equipe|club|pts|points|classement)$/i.test(sansAccent(n))) return;
+    const o = meilleur.o;
+    if (o.diff == null && o.bp != null && o.bc != null) o.diff = o.bp - o.bc;
+    // un chiffre mal lu : la différence de buts (avec son signe) permet de retrouver les buts encaissés
+    if (o.bp != null && o.bc != null && o.diff != null && o.bp - o.bc !== o.diff && o.bp - o.diff >= 0) o.bc = o.bp - o.diff;
+    equipes.push({ nom: n, pts: o.pts ?? null, j: o.j ?? null, g: o.g ?? null, n: o.n ?? null, p: o.p ?? null, bp: o.bp ?? null, bc: o.bc ?? null, diff: o.diff ?? null });
+  });
+  return { nom: nom || null, date: date || null, equipes, remarque: equipes.length ? "Lu par le lecteur intégré du téléphone : vérifie bien les chiffres." : "Je n'ai pas reconnu de tableau de classement." };
+}
+
+// ---------- Résultats et matchs ----------
+function lireMatchsTexte(txt) {
+  const L = lignesTexte(txt), out = [];
+  let date = "";
+  const score1 = /^(.*?[a-zA-ZÀ-ÿ].*?)\s+(\d{1,2})\s*[-:]\s*(\d{1,2})\s+(.*[a-zA-ZÀ-ÿ].*)$/;
+  const scoreSeul = /^(\d{1,2})\s*[-:]\s*(\d{1,2})$/;
+  const nomScore = /^(.*[a-zA-ZÀ-ÿ].*?)\s+(\d{1,2})$/;
+  const affiche = /^(.*?[a-zA-ZÀ-ÿ].*?)\s+(?:(\d{1,2}\s?[h:]\s?\d{2})|vs\.?|contre)\s+(.*[a-zA-ZÀ-ÿ].*)$/i;
+  for (let i = 0; i < L.length; i++) {
+    const l = L[i];
+    const d = dateDansLigne(l); if (d) date = d;
+    let r;
+    const sansDate = l.replace(/(?<!\d)\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?(?!\d)/, " ").replace(/\b\d{1,2}\s?[h:]\s?\d{2}\b/, "").trim();
+    if ((r = score1.exec(sansDate))) { out.push({ dom: nettoyerNom(r[1]), ext: nettoyerNom(r[4]), sd: +r[2], se: +r[3], d: date, heure: heureDansLigne(l) }); continue; }
+    if ((r = scoreSeul.exec(l)) && i > 0 && i + 1 < L.length && aDesLettres(L[i - 1]) && aDesLettres(L[i + 1])) { out.push({ dom: nettoyerNom(L[i - 1]), ext: nettoyerNom(L[i + 1]), sd: +r[1], se: +r[2], d: date }); i++; continue; }
+    if ((r = nomScore.exec(l)) && i + 1 < L.length) { const r2 = nomScore.exec(L[i + 1]); if (r2 && !score1.test(L[i + 1])) { out.push({ dom: nettoyerNom(r[1]), ext: nettoyerNom(r2[1]), sd: +r[2], se: +r2[2], d: date }); i++; continue; } }
+    if ((r = affiche.exec(l.replace(/(?<!\d)\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?(?!\d)/, " ").trim()))) out.push({ dom: nettoyerNom(r[1]), ext: nettoyerNom(r[3]), sd: null, se: null, d: date, heure: r[2] ? heureDansLigne(r[2]) : heureDansLigne(l) });
+  }
+  return out.filter(m => m.dom && m.ext && cleClub(m.dom) !== cleClub(m.ext));
+}
+function resultatsDepuisTexte(txt) {
+  const eqs = ETAT.ligue ? ETAT.ligue.equipes : [];
+  const ms = lireMatchsTexte(txt).filter(m => m.sd != null).map(m => ({ dom: nomLePlusProche(m.dom, eqs) || m.dom, ext: nomLePlusProche(m.ext, eqs) || m.ext, sd: m.sd, se: m.se, d: m.d || null }));
+  return { matchs: ms, remarque: ms.length ? "Lu par le lecteur intégré du téléphone : vérifie bien les équipes et les scores." : "Je n'ai pas reconnu de score (format « Équipe 2 - 1 Équipe »)." };
+}
+function mesMatchsDepuisTexte(txt) {
+  const tous = lireMatchsTexte(txt);
+  const miens = tous.filter(m => estMonClub(m.dom) || estMonClub(m.ext));
+  const liste = (miens.length ? miens : tous).map(m => {
+    const ext = miens.length ? estMonClub(m.ext) && !estMonClub(m.dom) : false;
+    const club = ext ? m.ext : m.dom, adv = ext ? m.dom : m.ext;
+    const eqs = ETAT.ligue ? ETAT.ligue.equipes : [];
+    return { d: m.d || null, club: miens.length ? (nomLePlusProche(club, [ETAT.profil.club, ...clubsConnus()].filter(Boolean), .6) || ETAT.profil.club || club) : club, adv: nomLePlusProche(adv, eqs) || adv, lieu: ext ? "ext" : "dom", bp: ext ? m.se : m.sd, bc: ext ? m.sd : m.se, comp: "champ", buts: null, passes: 0, heure: m.heure || null };
+  });
+  return { matchs: liste, remarque: liste.length ? `Lu par le lecteur intégré du téléphone${miens.length ? "" : " (je n'ai pas reconnu ton club : vérifie qui est ton équipe)"}. Il ne sait pas qui a marqué : indique tes buts et tes passes.` : "Je n'ai pas reconnu de match (format « Équipe 2 - 1 Équipe » ou « Équipe 15h00 Équipe »)." };
+}
+
+// ---------- Statistiques ----------
+const MOTS_STATS = [
+  ["tirsCadres", /tirs?\s+cadr/], ["tirs", /\btirs?\b|\bshots?\b/], ["passesCles", /passes?\s+cl[eé]/], ["passesOk", /passes?\s+(reussies|completees|ok)|precision\s+des\s+passes|\bpasses?\b/],
+  ["occCreees", /occasions?\s+cre/], ["grossesOcc", /grosses?\s+occasions?/], ["dribbles", /dribbles?/], ["duels", /duels?/],
+  ["distance", /distance|parcouru|\bkm\b/], ["vmax", /vitesse|v\.?\s?max|sprint/], ["min", /minutes?\s+jouees|temps\s+de\s+jeu|\bminutes?\b/], ["note", /\bnote\b/], ["xg", /\bxg\b/], ["xa", /\bxa\b/]
+];
+function statsDepuisTexte(txt) {
+  const stats = {};
+  let d = "";
+  lignesTexte(txt).forEach((l0, i, L) => {
+    if (!d) d = dateDansLigne(l0);
+    const l = sansAccent(l0).toLowerCase();
+    const cle = MOTS_STATS.find(([k, re]) => stats[k] == null && re.test(l));
+    if (!cle) return;
+    const k = cle[0];
+    const source = /\d/.test(l.replace(cle[1], "")) ? l.replace(cle[1], " ") : sansAccent(L[i + 1] || "").toLowerCase();
+    const frac = /(\d+)\s*\/\s*(\d+)/.exec(source);
+    if (frac && (k === "passesOk" || k === "tirsCadres" || k === "dribbles" || k === "duels")) {
+      stats[k] = +frac[1];
+      if (k === "passesOk") stats.passesTot = +frac[2];
+      if (k === "tirsCadres" && stats.tirs == null) stats.tirs = +frac[2];
+      return;
+    }
+    const r = /(\d+(?:[.,]\d+)?)\s*(km\/h|kmh|km|m\b|%)?/.exec(source);
+    if (!r) return;
+    let x = parseFloat(r[1].replace(",", "."));
+    if (k === "distance" && (r[2] === "m" || x > 100)) x = Math.round(x) / 1000;
+    if (k === "passesOk" && r[2] === "%") return;
+    stats[k] = x;
+  });
+  return { d: d || null, stats, remarque: Object.keys(stats).length ? "Lu par le lecteur intégré du téléphone : vérifie bien les chiffres." : "Je n'ai pas reconnu de statistiques (ex. « Tirs 4 », « Distance 6,3 km »)." };
+}
+
+const LECTURE_OCR = { classement: lireClassementTexte, resultats: resultatsDepuisTexte, matchs: mesMatchsDepuisTexte, stats: statsDepuisTexte };
+function analyserOCR(fichiers, mode, ctx) {
+  const M = MODES_CAPTURE[mode] || MODES_CAPTURE.matchs;
+  let annule = false, fini = false;
+  let etat = null, barre = null;
+  const fe = feuille("Lecture en cours…", corps => {
+    corps.append(el("div", { class: "capt-apercus" }, fichiers.map(fi => { const u = URL.createObjectURL(fi); const i = el("img", { src: u, alt: "Capture" }); i.onload = () => URL.revokeObjectURL(u); return i; })));
+    etat = el("span", { text: "Préparation du lecteur… (la première fois il se télécharge, il faut internet)" });
+    barre = el("span", { style: "width:3%;background:var(--accent)" });
+    corps.append(el("div", { class: "capt-attente" }, el("span", { class: "capt-rond", "aria-hidden": "true" }), etat), el("div", { class: "jauge" }, barre),
+      el("p", { class: "aide", text: "Lecteur intégré au téléphone : il lit le texte de l'image, sans Claude. Tu pourras tout vérifier." }),
+      bouton("Arrêter", () => { annule = true; fe.fermer(); }, "mini gris"));
+  }, { critique: true, onClose: () => { if (!fini) annule = true; } });
+  const STATUTS = { "loading tesseract core": "Chargement du lecteur…", "initializing tesseract": "Démarrage du lecteur…", "loading language traineddata": "Chargement du français…", "initializing api": "Démarrage…", "recognizing text": "Lecture du texte…" };
+  lireTexteImages(fichiers, (st, p) => { if (etat) etat.textContent = (STATUTS[st] || (st.startsWith("image") ? `Lecture de l'${st}…` : "Lecture…")); if (barre) barre.style.width = Math.max(3, Math.round(p * 100)) + "%"; })
+    .then(txt => {
+      fini = true; if (annule) return; fe.fermer();
+      const r = (LECTURE_OCR[mode] || mesMatchsDepuisTexte)(txt);
+      if (window.__dernierTexteOCR !== undefined) window.__dernierTexteOCR = txt;
+      M.fin(r, ctx);
+    })
+    .catch(e => {
+      fini = true; if (annule) return; fe.fermer();
+      toast(e && e.message === "reseau" ? "Le lecteur n'a pas pu se télécharger. Connecte-toi à internet (la première fois) et réessaie." : "La lecture de l'image n'a pas marché. Essaie avec une capture plus nette.", 6000);
+    });
 }
 
 // =====================================================================
