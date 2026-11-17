@@ -8403,13 +8403,19 @@ function preparerImage(fichier) {
     const u = URL.createObjectURL(fichier), img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(u);
-      const k = img.width < 1000 ? 2 : 1;
+      const k = Math.min(2.5, Math.max(1, 1800 / img.width));
       const c = document.createElement("canvas"); c.width = img.width * k; c.height = img.height * k;
       const g = c.getContext("2d"); g.drawImage(img, 0, 0, c.width, c.height);
       const d = g.getImageData(0, 0, c.width, c.height), px = d.data;
       let somme = 0;
       for (let i = 0; i < px.length; i += 4) { const y = .299 * px[i] + .587 * px[i + 1] + .114 * px[i + 2]; px[i] = px[i + 1] = px[i + 2] = y; somme += y; }
       if (somme / (px.length / 4) < 128) for (let i = 0; i < px.length; i += 4) px[i] = px[i + 1] = px[i + 2] = 255 - px[i];
+      // seuil d'Otsu : le texte devient noir sur fond blanc, les dégradés et le verre disparaissent
+      const h = new Array(256).fill(0); for (let i = 0; i < px.length; i += 4) h[px[i] | 0]++;
+      const tot = px.length / 4; let sAll = 0; for (let t = 0; t < 256; t++) sAll += t * h[t];
+      let sB = 0, wB = 0, best = 0, seuil = 160;
+      for (let t = 0; t < 256; t++) { wB += h[t]; if (!wB) continue; const wF = tot - wB; if (!wF) break; sB += t * h[t]; const mB = sB / wB, mF = (sAll - sB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > best) { best = v; seuil = t; } }
+      for (let i = 0; i < px.length; i += 4) px[i] = px[i + 1] = px[i + 2] = px[i] > seuil ? 255 : 0;
       g.putImageData(d, 0, 0);
       ok(c);
     };
@@ -8418,6 +8424,9 @@ function preparerImage(fichier) {
   });
 }
 
+// Le mode automatique de Tesseract lit les tableaux colonne par colonne (les lignes d'équipes se perdent) :
+// on lit en « bloc de lignes » (6) puis en « colonnes alignées » (4), et l'appli garde la meilleure lecture.
+const MODES_PAGE = ["6", "4"];
 async function lireTexteImages(fichiers, progres) {
   const T = await chargerTesseract();
   let worker;
@@ -8425,17 +8434,21 @@ async function lireTexteImages(fichiers, progres) {
   try { worker = await T.createWorker("fra", 1, { logger: log }); }
   catch (e) { worker = await T.createWorker("eng", 1, { logger: log }); }
   try {
-    await worker.setParameters({ preserve_interword_spaces: "1" }).catch(() => {});
-    let txt = "";
+    const textes = MODES_PAGE.map(() => "");
     for (let i = 0; i < fichiers.length; i++) {
-      progres && progres(`image ${i + 1}/${fichiers.length}`, 0);
       const c = await preparerImage(fichiers[i]);
-      const r = await worker.recognize(c);
-      txt += "\n" + (r && r.data && r.data.text || "");
+      for (let k = 0; k < MODES_PAGE.length; k++) {
+        progres && progres(`image ${i + 1}/${fichiers.length}${k ? " (2e lecture)" : ""}`, 0);
+        await worker.setParameters({ tessedit_pageseg_mode: MODES_PAGE[k], preserve_interword_spaces: "1" }).catch(() => {});
+        const r = await worker.recognize(c);
+        textes[k] += "\n" + (r && r.data && r.data.text || "");
+      }
     }
-    return txt;
+    return textes;
   } finally { worker.terminate().catch(() => {}); }
 }
+// nombre de choses comprises dans une lecture (pour garder la meilleure)
+function richesse(r) { return (r.equipes ? r.equipes.filter(e => e.pts != null).length * 2 + r.equipes.filter(e => e.bp != null).length : 0) + (r.matchs ? r.matchs.length : 0) + (r.stats ? Object.keys(r.stats).length : 0); }
 
 // ---------- outils de lecture du texte ----------
 const MOIS_FR = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
@@ -8443,14 +8456,25 @@ const sansAccent = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "")
 function lignesTexte(txt) {
   return String(txt || "").split(/\r?\n/).map(l => l.replace(/[|\[\]{}«»"“”_]/g, " ").replace(/[–—]/g, "-").replace(/\s+/g, " ").trim()).filter(l => l.length > 1);
 }
-const nombreOCR = t => { let x = String(t).replace(/^[oO]$/, "0").replace(/^[lI]$/, "1"); if (/\d/.test(x) && x.length <= 5) x = x.replace(/[^\d+-]/g, ""); return /^[+-]?\d{1,3}$/.test(x) ? parseInt(x, 10) : null; };
+const nombreOCR = t => { let x = String(t).replace(/^[oO]$/, "0").replace(/^[lI]$/, "1"); if (/\d/.test(x) && x.length <= 5) x = x.replace(/[^\d+-]/g, ""); return /^[+-]?\d{1,5}$/.test(x) ? parseInt(x, 10) : null; };
+// signe ou tache isolée au milieu des chiffres (« = », « - », « . ») : une case illisible
+const caseIllisible = t => /^[^a-zA-ZÀ-ÿ0-9]{1,2}$/.test(t);
+// toutes les façons de couper « 5104 » en nombres (5 1 0 4, 51 0 4, 5 10 4…)
+function decoupes(ch) {
+  if (!ch) return [[]];
+  const out = [];
+  for (let l = 1; l <= Math.min(2, ch.length); l++) { if (l === 2 && ch[0] === "0") continue; decoupes(ch.slice(l)).forEach(rest => out.push([+ch.slice(0, l), ...rest])); }
+  return out;
+}
 // « 311 » peut être « 3 1 1 » collés par la lecture : on essaie les deux
 function variantesNombres(toks) {
   let vars = [[]];
   toks.forEach(t => {
+    if (caseIllisible(t)) { vars = vars.map(v => v.concat([null])); return; }
     const n = nombreOCR(t), brut = String(n);
-    const options = [[n]];
-    if (n >= 10 && !/^[+-]/.test(brut)) { options.push(brut.split("").map(Number)); if (brut.length === 3) { options.push([+brut[0], +brut.slice(1)]); options.push([+brut.slice(0, 2), +brut[2]]); } }
+    const options = n != null && Math.abs(n) <= 99 ? [[n]] : [];
+    if (n >= 10 && !/^[+-]/.test(brut)) decoupes(brut).forEach(o => { if (o.length > 1) options.push(o); });
+    if (!options.length) options.push([null]);
     const nv = []; vars.forEach(v => options.forEach(o => { if (nv.length < 256) nv.push(v.concat(o)); })); vars = nv;
   });
   return vars;
@@ -8498,7 +8522,7 @@ const ORDRES_CLASSEMENT = [
   ["pts", "j", "g", "n", "p"], ["pts", "j", "diff"], ["pts", "j"]
 ];
 function noteLigne(o) {
-  let s = 0;
+  let s = -Object.values(o).filter(v => v == null).length * 1.5;
   if (o.j != null && o.g != null && o.n != null && o.p != null) s += o.g + o.n + o.p === o.j ? 4 : -4;
   if (o.bp != null && o.bc != null && o.diff != null) s += o.bp - o.bc === o.diff ? 4 : -4;
   if (o.pts != null && o.g != null && o.n != null) s += [3 * o.g + o.n, 4 * o.g + 2 * o.n + (o.p || 0), 3 * o.g + 2 * o.n + (o.p || 0), 3 * o.g + o.n + (o.p || 0)].includes(o.pts) ? 3 : -1;
@@ -8513,8 +8537,8 @@ function lireClassementTexte(txt) {
     if (!nom && /poule|division|district|championnat|\bD\d\b|\bU1\d\b|\bR\d\b/i.test(l) && !/\d+\s+\d+\s+\d+/.test(l)) nom = nettoyerNom(l);
     const toks = l.split(" ");
     let i = toks.length; const brutes = [];
-    while (i > 0 && nombreOCR(toks[i - 1]) != null) { brutes.unshift(toks[i - 1]); i--; }
-    if (brutes.length < 2) return;
+    while (i > 0 && (nombreOCR(toks[i - 1]) != null || (caseIllisible(toks[i - 1]) && i - 2 >= 0 && nombreOCR(toks[i - 2]) != null))) { brutes.unshift(toks[i - 1]); i--; }
+    if (brutes.filter(t => !caseIllisible(t)).length < 2) return;
     let nomToks = toks.slice(0, i);
     if (nomToks.length > 1 && /^\d{1,2}(?:[.)e]|er)?$/.test(nomToks[0])) nomToks = nomToks.slice(1);
     if (!aDesLettres(nomToks.join(" "))) return;
@@ -8535,7 +8559,8 @@ function lireClassementTexte(txt) {
     const o = meilleur.o;
     if (o.diff == null && o.bp != null && o.bc != null) o.diff = o.bp - o.bc;
     // un chiffre mal lu : la différence de buts (avec son signe) permet de retrouver les buts encaissés
-    if (o.bp != null && o.bc != null && o.diff != null && o.bp - o.bc !== o.diff && o.bp - o.diff >= 0) o.bc = o.bp - o.diff;
+    if (o.bp != null && o.diff != null && (o.bc == null || o.bp - o.bc !== o.diff) && o.bp - o.diff >= 0) o.bc = o.bp - o.diff;
+    if (o.bc != null && o.diff != null && o.bp == null) o.bp = o.bc + o.diff;
     equipes.push({ nom: n, pts: o.pts ?? null, j: o.j ?? null, g: o.g ?? null, n: o.n ?? null, p: o.p ?? null, bp: o.bp ?? null, bc: o.bc ?? null, diff: o.diff ?? null });
   });
   return { nom: nom || null, date: date || null, equipes, remarque: equipes.length ? "Lu par le lecteur intégré du téléphone : vérifie bien les chiffres." : "Je n'ai pas reconnu de tableau de classement." };
@@ -8626,9 +8651,11 @@ function analyserOCR(fichiers, mode, ctx) {
   }, { critique: true, onClose: () => { if (!fini) annule = true; } });
   const STATUTS = { "loading tesseract core": "Chargement du lecteur…", "initializing tesseract": "Démarrage du lecteur…", "loading language traineddata": "Chargement du français…", "initializing api": "Démarrage…", "recognizing text": "Lecture du texte…" };
   lireTexteImages(fichiers, (st, p) => { if (etat) etat.textContent = (STATUTS[st] || (st.startsWith("image") ? `Lecture de l'${st}…` : "Lecture…")); if (barre) barre.style.width = Math.max(3, Math.round(p * 100)) + "%"; })
-    .then(txt => {
+    .then(textes => {
       fini = true; if (annule) return; fe.fermer();
-      const r = (LECTURE_OCR[mode] || mesMatchsDepuisTexte)(txt);
+      const lire = LECTURE_OCR[mode] || mesMatchsDepuisTexte;
+      const r = textes.map(t => lire(t)).sort((a, b) => richesse(b) - richesse(a))[0];
+      const txt = textes[0];
       if (window.__dernierTexteOCR !== undefined) window.__dernierTexteOCR = txt;
       M.fin(r, ctx);
     })
