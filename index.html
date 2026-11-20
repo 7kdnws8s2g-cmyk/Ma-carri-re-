@@ -1170,6 +1170,10 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 .texte-lu { margin-top: 8px; font-size: .8rem; }
 .texte-lu summary { cursor: pointer; color: var(--muted); padding: 10px 0; min-height: 44px; }
 .texte-lu pre { white-space: pre-wrap; word-break: break-word; font-size: .74rem; background: var(--glass); padding: 10px; border-radius: 12px; max-height: 260px; overflow: auto; }
+
+.via-etape { padding: 14px; gap: 8px; }
+.via-etape .mini { align-self: flex-start; min-height: 44px; }
+.via-demande { white-space: pre-wrap; word-break: break-word; font-size: .72rem; max-height: 200px; overflow: auto; background: var(--glass); padding: 10px; border-radius: 12px; -webkit-user-select: text; user-select: text; }
 </style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
@@ -7032,10 +7036,10 @@ async function lancerImportCapture(mode, ctx) {
   if (!mode) {
     feuille("Importer une capture", (corps, f) => {
       corps.append(el("p", { text: "📸 Qu'est-ce qu'il y a sur ta capture ?" }),
-        el("div", { class: "capt-modes" }, Object.entries(MODES_CAPTURE).map(([k, x]) => el("button", { class: "carte lg capt-mode", type: "button", onclick: () => choisir(k, f) },
+        el("div", { class: "capt-modes" }, Object.entries(MODES_CAPTURE).map(([k, x]) => el("button", { class: "carte lg capt-mode", type: "button", onclick: () => { if (ia.ocr) { f.fermer(); lancerImportCapture(k, ctx); } else choisir(k, f); } },
           el("span", { class: "capt-mode-ico", "aria-hidden": "true", text: x.ico }), el("span", { class: "i-txt" }, el("b", { text: x.titre }), el("span", { class: "muted petit", text: x.aide })), el("span", { class: "chev", "aria-hidden": "true", text: "›" })))),
         el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Rien n'est ajouté avant que tu aies vérifié.` }),
-        ia.ocr ? el("p", { class: "aide", text: "🤖 Lecteur intégré au téléphone (sans Claude) : il lit le texte de l'image. Les captures nettes, bien droites, avec le tableau entier, marchent le mieux. La première fois, il se télécharge (il faut internet)." }) : "");
+        "");
     });
     return;
   }
@@ -7043,8 +7047,12 @@ async function lancerImportCapture(mode, ctx) {
   feuille(x.titre, (corps, f) => {
     corps.append(el("p", { text: `${x.ico} ${x.explication || x.aide}` }),
       el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Tu vérifies tout avant que ce soit enregistré.` }),
-      bouton("📷 Choisir mes captures", () => choisir(mode, f), "mini vert capt-gros"),
-      ia.ocr ? el("p", { class: "aide", text: "🤖 Lecteur intégré au téléphone (sans Claude). Les captures nettes avec le tableau entier marchent le mieux. La première fois, il se télécharge (il faut internet)." }) : "");
+      ...(ia.ocr ? [
+        bouton("🤖 Faire lire par Claude (le plus précis)", () => { f.fermer(); feuilleViaClaude(mode, ctx); }, "mini vert capt-gros"),
+        el("p", { class: "aide", text: "Claude lit ta capture exactement comme dans le chat : noms, scores, buteurs… Tu copies sa réponse ici." }),
+        bouton("📷 Lecteur du téléphone (rapide, moins précis)", () => choisir(mode, f), "mini gris capt-gros"),
+        el("p", { class: "aide", text: "Il lit seulement le texte de l'image, sans Claude. La première fois, il se télécharge (il faut internet)." })
+      ] : [bouton("📷 Choisir mes captures", () => choisir(mode, f), "mini vert capt-gros")]));
   });
 }
 
@@ -8685,6 +8693,59 @@ function analyserOCR(fichiers, mode, ctx) {
       fini = true; if (annule) return; fe.fermer();
       toast(e && e.message === "reseau" ? "Le lecteur n'a pas pu se télécharger. Connecte-toi à internet (la première fois) et réessaie." : "La lecture de l'image n'a pas marché. Essaie avec une capture plus nette.", 6000);
     });
+}
+
+// =====================================================================
+//  LECTURE PAR CLAUDE DEPUIS LE SITE : l'appli prépare la demande, le
+//  joueur l'envoie à Claude avec sa capture (appli Claude), puis colle
+//  la réponse ici. Même lecture que dans le chat, sans clé secrète.
+// =====================================================================
+function demandePourClaude(mode, ctx) {
+  const M = MODES_CAPTURE[mode] || MODES_CAPTURE.matchs;
+  return `${M.prompt(ctx)}
+
+(Demande préparée par mon appli « Mon Compteur de Buts ». Je t'envoie la capture avec ce message. Réponds seulement avec le JSON, sans autre texte.)`;
+}
+function copierTexte(t) {
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).then(() => true, () => copierAncien(t));
+  return Promise.resolve(copierAncien(t));
+}
+function copierAncien(t) {
+  const z = el("textarea", { style: "position:fixed;top:0;left:0;opacity:0" }); z.value = t; document.body.append(z); z.select();
+  let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} z.remove(); return ok;
+}
+// récupère le JSON dans la réponse collée (avec ou sans ```json, avec du texte autour)
+function jsonDansReponse(txt) {
+  let t = String(txt || "").replace(/```(?:json)?/gi, "").trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a < 0 || b <= a) return null;
+  t = t.slice(a, b + 1).replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  try { return JSON.parse(t); } catch (e) {
+    try { return JSON.parse(t.replace(/,\s*([}\]])/g, "$1")); } catch (e2) { return null; }
+  }
+}
+function feuilleViaClaude(mode, ctx) {
+  const M = MODES_CAPTURE[mode] || MODES_CAPTURE.matchs;
+  const demande = demandePourClaude(mode, ctx);
+  let brut = null;
+  feuille("Faire lire par Claude", (corps, f) => {
+    const etat = el("span", { class: "aide", style: "margin:0" });
+    const zone = el("textarea", { class: "champ", rows: "6", placeholder: "Colle ici la réponse de Claude (elle commence par { )", "aria-label": "Réponse de Claude" });
+    const etape = (n, titre, ...x) => el("div", { class: "carte lg via-etape" }, el("b", { text: `${n}. ${titre}` }), ...x);
+    corps.append(
+      el("p", { text: `${M.ico} ${M.titre}` }),
+      etape(1, "Copie la demande", bouton("📋 Copier la demande", () => copierTexte(demande).then(ok => { etat.textContent = ok ? "✅ Demande copiée !" : "Copie impossible : touche longuement le texte ci-dessous pour le copier."; if (!ok) brut.open = true; }), "mini vert"), etat,
+        (() => { const d = el("details", {}, el("summary", { text: "Voir la demande" }), el("pre", { class: "via-demande", text: demande })); return (brut = d); })()),
+      etape(2, "Envoie-la à Claude avec ta capture", el("p", { class: "aide", style: "margin:0", text: "Ouvre l'appli Claude, commence une nouvelle conversation, colle la demande, ajoute ta capture d'écran (📎 ou +) et envoie." }),
+        el("a", { class: "mini gris", href: "https://claude.ai/new", target: "_blank", rel: "noopener" }, "Ouvrir Claude ↗")),
+      etape(3, "Copie la réponse de Claude et colle-la ici", zone,
+        bouton("✅ Lire la réponse", () => {
+          const r = jsonDansReponse(zone.value);
+          if (!r) { toast("Je ne trouve pas la réponse de Claude. Copie bien tout son message (il commence par { ).", 5000); return; }
+          f.fermer(); M.fin(r, ctx);
+        }, "mini vert capt-gros")),
+      el("p", { class: "aide", text: "Ensuite tu vérifies tout avant que ce soit enregistré, comme d'habitude." }));
+  });
 }
 
 // =====================================================================
