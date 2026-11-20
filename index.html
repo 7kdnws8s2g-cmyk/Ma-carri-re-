@@ -1166,6 +1166,10 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 .capt-mode .i-txt { display: flex; flex-direction: column; gap: 2px; }
 .capt-mode .chev { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: var(--muted); }
 .capt-mode-ico { font-size: 1.7rem; flex: none; width: 36px; text-align: center; }
+
+.texte-lu { margin-top: 8px; font-size: .8rem; }
+.texte-lu summary { cursor: pointer; color: var(--muted); padding: 10px 0; min-height: 44px; }
+.texte-lu pre { white-space: pre-wrap; word-break: break-word; font-size: .74rem; background: var(--glass); padding: 10px; border-radius: 12px; max-height: 260px; overflow: auto; }
 </style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
@@ -7113,7 +7117,8 @@ function nettoyerImport(r) {
       butsInconnus: x.buts === null || x.buts === undefined
     };
     m.doublon = !!ETAT.matchs.find(y => y.d === m.d && m.adv && (y.adv || "").toLowerCase().trim() === m.adv.toLowerCase().trim());
-    m.garder = !m.doublon && !!m.d;
+    m.nomDouteux = typeof nomIncomplet === "function" && nomIncomplet(m.adv);
+    m.garder = !m.doublon && !!m.d && !m.nomDouteux;
     return m;
   });
   return { matchs, remarque: r && typeof r.remarque === "string" ? r.remarque.slice(0, 300) : "" };
@@ -7164,6 +7169,7 @@ function carteImport(m, maj) {
   boite.append(
     el("label", { class: "capt-tete" }, coche, el("b", { text: `${m.club || "Mon équipe"} ${m.bp ?? "–"} - ${m.bc ?? "–"} ${m.adv || "?"}` })),
     m.doublon ? el("p", { class: "aide capt-alerte", text: "⚠️ Ce match semble déjà être dans ta carrière : décoché pour éviter un doublon." }) : "",
+    m.nomDouteux ? el("p", { class: "aide capt-alerte", text: "⚠️ Le nom de l'adversaire est mal lu : écris-le en entier, puis coche le match." }) : "",
     m.butsInconnus ? el("p", { class: "aide capt-alerte", text: "La capture ne dit pas qui a marqué : indique tes buts toi-même." }) : "",
     el("div", { class: "capt-grille" },
       champ("Date", date), champ("Adversaire", texte("adv", "Adversaire")),
@@ -8579,12 +8585,25 @@ function lireMatchsTexte(txt) {
     const d = dateDansLigne(l); if (d) date = d;
     let r;
     const sansDate = l.replace(/(?<!\d)\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?(?!\d)/, " ").replace(/\b\d{1,2}\s?[h:]\s?\d{2}\b/, "").trim();
-    if ((r = score1.exec(sansDate))) { out.push({ dom: nettoyerNom(r[1]), ext: nettoyerNom(r[4]), sd: +r[2], se: +r[3], d: date, heure: heureDansLigne(l) }); continue; }
-    if ((r = scoreSeul.exec(l)) && i > 0 && i + 1 < L.length && aDesLettres(L[i - 1]) && aDesLettres(L[i + 1])) { out.push({ dom: nettoyerNom(L[i - 1]), ext: nettoyerNom(L[i + 1]), sd: +r[1], se: +r[2], d: date }); i++; continue; }
-    if ((r = nomScore.exec(l)) && i + 1 < L.length) { const r2 = nomScore.exec(L[i + 1]); if (r2 && !score1.test(L[i + 1])) { out.push({ dom: nettoyerNom(r[1]), ext: nettoyerNom(r2[1]), sd: +r[2], se: +r2[2], d: date }); i++; continue; } }
-    if ((r = affiche.exec(l.replace(/(?<!\d)\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?(?!\d)/, " ").trim()))) out.push({ dom: nettoyerNom(r[1]), ext: nettoyerNom(r[3]), sd: null, se: null, d: date, heure: r[2] ? heureDansLigne(r[2]) : heureDansLigne(l) });
+    if ((r = score1.exec(sansDate))) { out.push({ ligne: i, dom: nettoyerNom(r[1]), ext: nettoyerNom(r[4]), sd: +r[2], se: +r[3], d: date, heure: heureDansLigne(l) }); continue; }
+    if ((r = scoreSeul.exec(l)) && i > 0 && i + 1 < L.length && aDesLettres(L[i - 1]) && aDesLettres(L[i + 1])) { out.push({ ligne: i, dom: nettoyerNom(L[i - 1]), ext: nettoyerNom(L[i + 1]), sd: +r[1], se: +r[2], d: date }); i++; continue; }
+    if ((r = nomScore.exec(l)) && i + 1 < L.length) { const r2 = nomScore.exec(L[i + 1]); if (r2 && !score1.test(L[i + 1])) { out.push({ ligne: i, dom: nettoyerNom(r[1]), ext: nettoyerNom(r2[1]), sd: +r[2], se: +r2[2], d: date }); i++; continue; } }
+    if ((r = affiche.exec(l.replace(/(?<!\d)\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?(?!\d)/, " ").trim()))) out.push({ ligne: i, dom: nettoyerNom(r[1]), ext: nettoyerNom(r[3]), sd: null, se: null, d: date, heure: r[2] ? heureDansLigne(r[2]) : heureDansLigne(l) });
   }
+  completerNoms(out, L);
   return out.filter(m => m.dom && m.ext && cleClub(m.dom) !== cleClub(m.ext));
+}
+// nom réduit à « FC » ou « RE » : le reste du nom est souvent sur la ligne d'à côté (logo, retour à la ligne)
+const nomIncomplet = n => !baseClub(n) || baseClub(n).replace(/ /g, "").length < 3;
+function completerNoms(out, L) {
+  out.forEach(m => {
+    const i = m.ligne;
+    if (i == null) return;
+    const seul = l => l && aDesLettres(l) && !/\d\s*[-:]\s*\d/.test(l) && !dateDansLigne(l) && l.length <= 40;
+    if (nomIncomplet(m.dom) && seul(L[i - 1])) m.dom = nettoyerNom(L[i - 1] + " " + m.dom);
+    if (nomIncomplet(m.ext) && seul(L[i + 1])) m.ext = nettoyerNom(m.ext + " " + L[i + 1]);
+  });
+  return out;
 }
 function resultatsDepuisTexte(txt) {
   const eqs = ETAT.ligue ? ETAT.ligue.equipes : [];
@@ -8654,10 +8673,13 @@ function analyserOCR(fichiers, mode, ctx) {
     .then(textes => {
       fini = true; if (annule) return; fe.fermer();
       const lire = LECTURE_OCR[mode] || mesMatchsDepuisTexte;
-      const r = textes.map(t => lire(t)).sort((a, b) => richesse(b) - richesse(a))[0];
-      const txt = textes[0];
+      const lectures = textes.map(t => ({ t, r: lire(t) })).sort((a, b) => richesse(b.r) - richesse(a.r));
+      const r = lectures[0].r, txt = lectures[0].t;
       if (window.__dernierTexteOCR !== undefined) window.__dernierTexteOCR = txt;
       M.fin(r, ctx);
+      // pour comprendre une mauvaise lecture : le texte brut lu sur l'image
+      const box = document.querySelector(".feuille:last-child .feuille-box");
+      if (box) box.append(el("details", { class: "texte-lu" }, el("summary", { text: "🔍 Voir le texte lu sur l'image" }), el("pre", { text: txt.trim().slice(0, 4000) || "(rien lu)" })));
     })
     .catch(e => {
       fini = true; if (annule) return; fe.fermer();
