@@ -1229,6 +1229,150 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 .obj-types li { display: grid; grid-template-columns: minmax(0, 1.3fr) 1fr auto; gap: 10px; align-items: center; font-size: .86rem; }
 .obj-types li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
+<style>
+/* =====================================================================
+   STYLE « PRO » (par défaut) : sobre, comme une appli officielle de suivi
+   du football. Fond uni, cartes blanches nettes, bandeau bleu marine,
+   boutons rectangulaires, pas de verre ni de reflets. Le style Liquid
+   Glass reste disponible dans Réglages.
+   ===================================================================== */
+:root[data-style="pro"] {
+  --surface: #ffffff; --surface2: #f3f5f9; --border: #dfe4ec; --primary: #0b2a6b; --primary-2: #123b8f;
+  --bg: #eef1f5; --fg: #0f1b33; --muted: #5d6984; --soft: #36507f;
+  --accent: #1652d6; --plus: #13804a; --danger: #cf2a33; --gold: #b86e00; --draw: #b86e00; --win: #13804a; --loss: #cf2a33;
+  --glass: var(--surface2); --glass-strong: var(--surface); --edge-low: var(--border); --edge: var(--border); --shadow: rgba(15, 27, 51, .08);
+  --c1: #1652d6; --c2: #b86e00;
+  --lg-radius: 12px; --lg-k-alpha: 1; --lg-k-edge: 0; --lg-k-shadow: 0;
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  --num: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
+  color-scheme: light;
+}
+:root[data-style="pro"][data-ambiance="nuit"] {
+  --surface: #131c2f; --surface2: #1a2439; --border: #27344f; --primary: #0f2f78; --primary-2: #1d4ed8;
+  --bg: #0a1020; --fg: #e8eef9; --muted: #9aa6bf; --soft: #b5c3e0;
+  --accent: #6b9bff; --plus: #2fb36b; --danger: #ef4f58; --gold: #e0a23a; --draw: #e0a23a; --win: #2fb36b; --loss: #ef4f58;
+  --c1: #5b8cff; --c2: #d08a2a; --shadow: rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+:root[data-style="pro"] body { background: var(--bg) !important; color: var(--fg); }
+:root[data-style="pro"] body::before { background: var(--primary) !important; }
+:root[data-style="pro"] :is(#fond, .goutte, .onglet-capsule, .seg-capsule) { display: none !important; }
+
+/* ---------- Surfaces : cartes blanches nettes, sans verre ---------- */
+:root[data-style="pro"] :is(.lg, .lg3, .carte, .tuile, .board, .hero, .total, .feuille-box, .lecteur-box, .saison-panel, .bravo, .segment, .bulle-msg, .coupe, .tableau, .ajoutMedia, .vignette.lienm, .form fieldset, .form details, .obj-liste li, .conv-liste li, .chrono li, .effectif li, .conv, .parcours button, .seance-ligne, .direct-score > div, .badge-c, .ma-place, .via-etape, .cal-ev, .bande div, .exo-info) {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  text-shadow: none !important;
+}
+:root[data-style="pro"] :is(.lg, .carte, .tuile, .board, .hero, .total, .lecteur-box, .saison-panel, .bravo, .segment, .tableau) {
+  background: var(--surface) !important;
+  box-shadow: 0 1px 2px var(--shadow), 0 0 0 1px var(--border) !important;
+  border-radius: 12px !important;
+}
+:root[data-style="pro"] :is(.lg, .lg3, .item, .stat, .tableau, .coupe, .lignes li, .form fieldset, .form details, .carte, .tuile)::before,
+:root[data-style="pro"] :is(.lg, .lg3, .item, .stat, .tableau, .coupe, .carte, .tuile)::after { display: none !important; }
+:root[data-style="pro"] :is(.item, .stat, .lignes li:not(.jourTete), .coupe, .obj-liste li, .conv-liste li, .chrono li, .effectif li, .conv, .parcours button, .direct-score > div, .badge-c, .cal-ev, .bande div, .exo-info, .listeMatchs li, .seance-ligne) {
+  background: var(--surface2) !important; box-shadow: none !important; border-radius: 10px !important;
+}
+:root[data-style="pro"] .carte .item, :root[data-style="pro"] .liste .item { background: var(--surface) !important; box-shadow: 0 0 0 1px var(--border) !important; }
+:root[data-style="pro"] .lg-presse { transform: none !important; filter: brightness(.97); }
+
+/* ---------- Typographie ---------- */
+:root[data-style="pro"] h1 { font-size: 1.55rem !important; font-weight: 800; letter-spacing: -.01em; color: var(--fg); text-shadow: none !important; white-space: normal; }
+:root[data-style="pro"] h2 { font-size: 1.08rem; font-weight: 800; color: var(--fg); }
+:root[data-style="pro"] h3 { font-size: .98rem; font-weight: 800; color: var(--fg); }
+:root[data-style="pro"] :is(.section-titre, .label-mini, .groupe-tete, .affiche-titre, .tuile .t-lab, .label) { text-transform: uppercase; letter-spacing: .06em; font-size: .72rem !important; font-weight: 800; color: var(--muted) !important; }
+:root[data-style="pro"] :is(.muted, .aide, .affiche-infos, .affiche-comp, .t-sous) { color: var(--muted) !important; }
+:root[data-style="pro"] :is(.tuile .t-val, .profil-nom b, .fiche-nom, .pro .pro-nom, .anneau-centre .gros, .board .gros, .gros-chiffre, .affiche-score b, .seance-score) { color: var(--fg) !important; text-shadow: none !important; font-family: var(--num); }
+:root[data-style="pro"] .tuile .t-val { font-size: 2rem; }
+:root[data-style="pro"] .tuile .chev, :root[data-style="pro"] .chev { color: var(--muted) !important; }
+
+/* ---------- Bandeau de navigation bleu marine ---------- */
+:root[data-style="pro"] .onglets {
+  background: var(--primary) !important; box-shadow: 0 2px 10px rgba(11, 42, 107, .25) !important;
+  border-radius: 14px !important; padding: 4px !important; gap: 0 !important;
+}
+:root[data-style="pro"] .onglets button { color: rgba(255, 255, 255, .72) !important; font-weight: 600 !important; border-radius: 10px !important; text-shadow: none !important; }
+:root[data-style="pro"] .onglets button[aria-current="page"] { color: #fff !important; background: rgba(255, 255, 255, .14) !important; font-weight: 800 !important; }
+:root[data-style="pro"] .onglets button[aria-current="page"]::after { content: ""; position: absolute; left: 30%; right: 30%; bottom: 3px; height: 3px; border-radius: 3px; background: #fff; }
+:root[data-style="pro"] .onglets .ico-svg { filter: none !important; color: inherit !important; }
+:root[data-style="pro"] .onglets .badge { box-shadow: 0 0 0 2px var(--primary); }
+
+/* ---------- Boutons ---------- */
+:root[data-style="pro"] .mini {
+  border-radius: 8px !important; background: var(--primary-2) !important; color: #fff !important;
+  box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  font-weight: 700; min-height: 40px; padding: 9px 14px; text-shadow: none;
+}
+:root[data-style="pro"] .mini.vert { background: var(--plus) !important; }
+:root[data-style="pro"] .mini.rouge { background: var(--danger) !important; }
+:root[data-style="pro"] .mini.gris { background: var(--surface) !important; color: var(--primary-2) !important; box-shadow: inset 0 0 0 1.5px var(--border) !important; }
+:root[data-style="pro"][data-ambiance="nuit"] .mini.gris { color: var(--fg) !important; }
+:root[data-style="pro"] :is(.btn-total, .btn) { border-radius: 10px !important; text-shadow: none !important; }
+:root[data-style="pro"] .btn-total.lg { background: var(--surface) !important; color: var(--fg) !important; font-weight: 700 !important; font-size: 1rem !important; }
+:root[data-style="pro"] .btn-plus.lg { background: var(--plus) !important; color: #fff !important; box-shadow: none !important; }
+:root[data-style="pro"] .lien { color: var(--accent); text-decoration: none; font-weight: 600; }
+:root[data-style="pro"] .lien.danger { color: var(--danger); }
+:root[data-style="pro"] :is(.rond, .capsule, .saison.lg) { background: var(--surface) !important; color: var(--fg) !important; box-shadow: 0 0 0 1px var(--border) !important; text-shadow: none !important; }
+:root[data-style="pro"] .menu button { background: var(--surface) !important; box-shadow: 0 0 0 1px var(--border) !important; border-radius: 12px !important; color: var(--fg); font-weight: 700; }
+
+/* ---------- Puces, filtres, onglets de page ---------- */
+:root[data-style="pro"] .chip { border-radius: 8px !important; background: var(--surface) !important; color: var(--fg) !important; box-shadow: inset 0 0 0 1px var(--border) !important; font-weight: 600; }
+:root[data-style="pro"] .chip[aria-pressed="true"] { background: var(--primary-2) !important; color: #fff !important; box-shadow: none !important; }
+:root[data-style="pro"] .filtres.segm { gap: 0; border-bottom: 1px solid var(--border); padding: 0; overflow-x: auto; }
+:root[data-style="pro"] .filtres.segm .chip { background: none !important; box-shadow: none !important; border-radius: 0 !important; color: var(--muted) !important; padding: 12px 14px; border-bottom: 3px solid transparent; }
+:root[data-style="pro"] .filtres.segm .chip[aria-pressed="true"] { color: var(--primary-2) !important; border-bottom-color: var(--primary-2); font-weight: 800; }
+:root[data-style="pro"][data-ambiance="nuit"] .filtres.segm .chip[aria-pressed="true"] { color: var(--fg) !important; border-bottom-color: var(--accent); }
+:root[data-style="pro"] .puce { border-radius: 6px; background: var(--surface2); color: var(--fg); box-shadow: none; font-weight: 700; }
+:root[data-style="pro"] .puce.v { background: color-mix(in srgb, var(--win) 16%, var(--surface)); color: var(--win); }
+:root[data-style="pro"] .puce.n { background: color-mix(in srgb, var(--draw) 16%, var(--surface)); color: var(--draw); }
+:root[data-style="pro"] .puce.d { background: color-mix(in srgb, var(--loss) 14%, var(--surface)); color: var(--loss); }
+:root[data-style="pro"] .puce.or { background: color-mix(in srgb, var(--gold) 18%, var(--surface)); color: var(--gold); }
+:root[data-style="pro"] .puce.compte { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent); }
+:root[data-style="pro"] .score { border-radius: 6px; background: var(--surface2); color: var(--fg); font-family: var(--num); }
+:root[data-style="pro"] .score.V { background: var(--win); color: #fff; }
+:root[data-style="pro"] .score.N { background: var(--draw); color: #fff; }
+:root[data-style="pro"] .score.D { background: var(--loss); color: #fff; }
+
+/* ---------- Tableaux (classements) ---------- */
+:root[data-style="pro"] .tableau table { font-size: .84rem; }
+:root[data-style="pro"] .tableau th { background: var(--surface2); color: var(--muted); font-weight: 800; padding: 9px 6px; }
+:root[data-style="pro"] .tableau td { border-top: 1px solid var(--border); }
+:root[data-style="pro"] .tableau tr.moi td { background: color-mix(in srgb, var(--accent) 12%, var(--surface)) !important; color: var(--fg); }
+:root[data-style="pro"] .tableau td.pts { color: var(--primary-2); }
+:root[data-style="pro"][data-ambiance="nuit"] .tableau td.pts { color: var(--accent); }
+
+/* ---------- Champs de saisie ---------- */
+:root[data-style="pro"] :is(select.champ, input.champ, textarea.champ, .jour input, .capt-champ input, .capt-champ select, .seance input, .form input:not([type=checkbox]):not([type=radio]), .form select, .form textarea) {
+  background: var(--surface2) !important; color: var(--fg) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; box-shadow: none !important;
+}
+
+/* ---------- Feuilles (formulaires) ---------- */
+:root[data-style="pro"] .feuille { background: rgba(8, 14, 30, .5); }
+:root[data-style="pro"] .feuille-box { background: var(--bg) !important; box-shadow: 0 10px 40px rgba(0, 0, 0, .25) !important; border-radius: 16px !important; }
+:root[data-style="pro"] .feuille-tete { background: var(--bg) !important; border-bottom: 1px solid var(--border); }
+:root[data-style="pro"] .toast { background: #0f1b33 !important; color: #fff !important; border-radius: 10px !important; box-shadow: 0 8px 24px rgba(0, 0, 0, .25) !important; }
+
+/* ---------- Matchs ---------- */
+:root[data-style="pro"] .ecusson { background: hsl(var(--h) 42% 38%) !important; box-shadow: none !important; font-weight: 800; }
+:root[data-style="pro"] .affiche-score b { font-size: 1.8rem; font-weight: 800; }
+:root[data-style="pro"] .affiche-titre { color: var(--primary-2) !important; }
+:root[data-style="pro"][data-ambiance="nuit"] .affiche-titre { color: var(--accent) !important; }
+:root[data-style="pro"] .bandeau-direct, :root[data-style="pro"] .doublons { box-shadow: 0 0 0 1.5px var(--danger) !important; }
+:root[data-style="pro"] .doublons { box-shadow: 0 0 0 1.5px var(--gold) !important; }
+:root[data-style="pro"] .avatar { box-shadow: 0 0 0 3px var(--surface), 0 0 0 4px var(--border) !important; background: var(--surface2) !important; }
+:root[data-style="pro"] .fiche-numero { background: var(--primary-2); box-shadow: 0 0 0 3px var(--surface); }
+:root[data-style="pro"] .jauge { background: var(--surface2); }
+:root[data-style="pro"] .jauge span { background: var(--primary-2); }
+:root[data-style="pro"] .forme i { border-radius: 6px; }
+:root[data-style="pro"] .vue-entre > * { animation-duration: .25s; }
+:root[data-style="pro"] .badge-c.ok { box-shadow: inset 0 0 0 1.5px var(--gold) !important; }
+:root[data-style="pro"] .cal-case.choisi { background: var(--primary-2); color: #fff; }
+:root[data-style="pro"] .note { color: var(--muted); }
+/* boutons-capsules plus discrets (profil sur l'accueil) */
+:root[data-style="pro"] .capsule { padding: 7px 12px !important; font-size: .84rem !important; font-weight: 700 !important; white-space: nowrap; border-radius: 8px !important; }
+:root[data-style="pro"] .profil-tete .rangee { flex-wrap: wrap !important; gap: 6px; }
+:root[data-style="pro"] .profil-nom b { font-size: 1.3rem; }
+</style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
 <canvas id="confettis" aria-hidden="true"></canvas>
@@ -7482,7 +7626,7 @@ function compteARebours(m) {
   if (!m.heure) return jours === 0 ? "Aujourd'hui" : jours === 1 ? "Demain" : `Dans ${jours} jours`;
   if (ms <= 0) return "Maintenant";
   const h = Math.floor(ms / 3600e3), mn = Math.floor((ms % 3600e3) / 60000);
-  if (h >= 48) return `Dans ${Math.floor(h / 24)} j ${h % 24} h`;
+  if (h >= 24) return `Dans ${Math.floor(h / 24)} j ${h % 24} h`;
   if (h >= 1) return `Dans ${h} h ${String(mn).padStart(2, "0")}`;
   return `Dans ${mn} min`;
 }
@@ -8291,6 +8435,7 @@ const ACCENTS = [["", "Automatique"], ["#2f8cff", "Bleu"], ["#1fae63", "Vert"], 
 function appliquerAccent() { let a = ""; try { a = localStorage.getItem("accent") || ""; } catch (e) {} if (a) document.documentElement.style.setProperty("--accent", a); else document.documentElement.style.removeProperty("--accent"); }
 appliquerAccent();
 function blocsReglagesPlus(box) {
+  box.append(carteStyleAppli());
   let a = ""; try { a = localStorage.getItem("accent") || ""; } catch (e) {}
   box.append(carte("🎨 Couleur de l'appli", el("div", { class: "chips-choix", role: "radiogroup", "aria-label": "Couleur" }, ACCENTS.map(([c, l]) => el("button", { class: "chip", type: "button", role: "radio", "aria-checked": String(a === c), "aria-pressed": String(a === c), onclick: () => { try { if (c) localStorage.setItem("accent", c); else localStorage.removeItem("accent"); } catch (e) {} appliquerAccent(); rafraichirFeuilles(); if (vueCourante === "section") rendreSection("reglages"); } }, c ? el("i", { class: "pastille", style: `background:${c}` }) : "", l)))));
   box.append(carte("🔔 Notifications",
@@ -9424,6 +9569,53 @@ function carteBilanObjectifs(f) {
     el("b", { text: `${x.ok}/${x.tot}` })))));
   if (types.length > 1) { const pire = types[types.length - 1]; if (pire[1].ok / pire[1].tot < .5) box.append(el("p", { class: "aide", text: `💡 Ton objectif le plus difficile : ${(TYPES_OBJ[pire[0]] || TYPES_OBJ.perso).ico} ${pire[0] === "perso" ? "tes objectifs perso" : TYPES_OBJ[pire[0]].nom(TYPES_OBJ[pire[0]].val || 1, {}).toLowerCase()}. Travaille-le à l'entraînement !` })); }
   return box;
+}
+
+// =====================================================================
+//  STYLE DE L'APPLI : « Pro » (sobre, par défaut) ou « Liquid Glass »
+//  En style Pro, les titres n'ont plus d'émojis (plus sérieux, plus lisible).
+// =====================================================================
+const StyleAppli = (() => {
+  let choix = "pro";
+  try { choix = localStorage.getItem("style") || "pro"; } catch (e) {}
+  const EMOJI = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{200D}\u{20E3}]/u;
+  const EMOJIS = /\s*[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{200D}\u{20E3}]+\s*/gu;
+  const CIBLES = "h1, h2, h3, .affiche-titre, .section-titre, .groupe-tete";
+  function nettoyer(racine) {
+    if (choix !== "pro") return;
+    (racine.matches && racine.matches(CIBLES) ? [racine] : []).concat([...(racine.querySelectorAll ? racine.querySelectorAll(CIBLES) : [])]).forEach(h => {
+      const w = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+      const textes = []; while (w.nextNode()) textes.push(w.currentNode);
+      textes.forEach((t, i) => {
+        if (!EMOJI.test(t.nodeValue)) return;
+        let v = t.nodeValue.replace(EMOJIS, " ");
+        if (i === 0) v = v.replace(/^\s+/, "");
+        if (i === textes.length - 1) v = v.replace(/\s+$/, "");
+        if (v !== t.nodeValue) t.nodeValue = v;
+      });
+    });
+  }
+  let attente = false;
+  const obs = new MutationObserver(ms => {
+    if (choix !== "pro" || attente) return;
+    attente = true;
+    requestAnimationFrame(() => { attente = false; nettoyer(document.body); });
+  });
+  function appliquer() {
+    document.documentElement.dataset.style = choix;
+    if (choix === "pro") { obs.observe(document.body, { childList: true, subtree: true }); nettoyer(document.body); }
+    else obs.disconnect();
+  }
+  if (document.body) appliquer(); else addEventListener("DOMContentLoaded", appliquer);
+  return {
+    get choix() { return choix; },
+    regler(c) { choix = c; try { localStorage.setItem("style", c); } catch (e) {} appliquer(); if (c !== "pro") toutRafraichir(); rafraichirFeuilles(); }
+  };
+})();
+function carteStyleAppli() {
+  return carte("Style de l'appli", el("div", { class: "chips-choix", role: "radiogroup", "aria-label": "Style" },
+    [["pro", "Pro (sobre)"], ["glass", "Liquid Glass"]].map(([k, l]) => el("button", { class: "chip", type: "button", role: "radio", "aria-checked": String(StyleAppli.choix === k), "aria-pressed": String(StyleAppli.choix === k), onclick: () => { StyleAppli.regler(k); if (vueCourante === "section") rendreSection("reglages"); } }, l))),
+    el("p", { class: "aide", style: "margin:0", text: "Pro : fond uni, cartes nettes, comme une appli officielle. Liquid Glass : effets de verre et couleurs." }));
 }
 
 // =====================================================================
