@@ -1211,6 +1211,23 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 
 .doublons { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--gold) 65%, transparent) !important; }
 .doublon { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------- Objectifs de match ---------- */
+.obj-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.obj-liste li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--glass); }
+.obj-liste li.obj-ok { box-shadow: inset 3px 0 0 var(--win); } .obj-liste li.obj-rate { box-shadow: inset 3px 0 0 var(--loss); } .obj-liste li.obj-verifier { box-shadow: inset 3px 0 0 var(--gold); }
+.obj-liste .i-txt { display: flex; flex-direction: column; gap: 2px; }
+.obj-ico { font-size: 1.2rem; }
+.obj-choix { display: flex; gap: 4px; } .obj-choix .chip { min-width: 44px; min-height: 40px; padding: 4px 8px; }
+.obj-bilan { margin: 0; font-weight: 800; } .obj-bilan.tout { color: var(--win); }
+.obj-edit { display: flex; flex-direction: column; gap: 10px; }
+.obj-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 8px 4px 8px 12px; border-radius: 14px; background: var(--glass); }
+.obj-pas { display: flex; align-items: center; gap: 6px; }
+.mini-rond { width: 40px !important; height: 40px !important; min-width: 40px; font-size: 1.2rem !important; padding: 0 !important; display: inline-flex; align-items: center; justify-content: center; }
+.obj-val { min-width: 2ch; text-align: center; font: 800 1.1rem var(--num); }
+.obj-types { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.obj-types li { display: grid; grid-template-columns: minmax(0, 1.3fr) 1fr auto; gap: 10px; align-items: center; font-size: .86rem; }
+.obj-types li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
@@ -3407,7 +3424,7 @@ function itemMatch(m) {
     el("span", { class: "i-ico", text: estSelection(m) ? "🌍" : m.lieu === "ext" ? "🚌" : "🏟️" }),
     el("span", { class: "i-txt" },
       el("b", { text: `${m.lieu === "ext" ? "à" : "vs"} ${m.adv || "Adversaire"}` }),
-      el("span", { text: [court(m.d), NOM_COMP[m.comp], m.tour, nb ? `⚽ ${nb}` : null, np ? `🎯 ${np}` : null, m.hdm ? "🏅" : null].filter(Boolean).join(" · ") })),
+      el("span", { text: [court(m.d), NOM_COMP[m.comp], m.tour, nb ? `⚽ ${nb}` : null, np ? `🎯 ${np}` : null, m.hdm ? "🏅" : null, (m.objectifs || []).length && !aVenir(m) ? `🏁 ${bilanObjectifs(m).ok}/${m.objectifs.length} obj.` : null].filter(Boolean).join(" · ") })),
     aVenir(m) ? el("span", { class: "score", text: "à venir" }) : el("span", { class: "score " + classeResultat(m), text: `${m.bp}-${m.bc}${aUneSeance(m) ? ` (${etatSeance(m.seance).ga}-${etatSeance(m.seance).gb} tab)` : ""}` })));
 }
 function selectFiltre(id, label, options, valeur, onchange) {
@@ -3686,6 +3703,7 @@ function rendreStats() {
   const f = filtreDepuis(filtreStats);
   const s = calculer(f);
   v.append(carteGraphiques(f));
+  v.append(carteBilanObjectifs(f));
   v.append(carte(null, blocStats(s), s.rapides ? el("p", { class: "aide", text: `Inclut ${pluriel(s.rapides, "but")} du compteur rapide sans match (non comptés dans les filtres club et compétition).` }) : null));
 
   // Jamais mélangées : une ligne par compétition
@@ -7493,6 +7511,7 @@ function carteMatchAffiche(m, { titre } = {}) {
       el("span", { class: "affiche-equipe" }, ecusson(d, true), el("b", { text: d }))),
     el("span", { class: "affiche-infos", text: [m.d ? joli(m.d) : "Date à préciser", lieuTexte(m) || (ext ? "À l'extérieur" : "À domicile"), aVenir(m) && m.rdv ? `RDV ${m.rdv}` : null].filter(Boolean).join(" · ") }),
     aVenir(m) && m.statut === "abs" && m.convoques ? el("span", { class: "puce", text: "Pas convoqué" }) : "",
+    (m.objectifs || []).length ? el("span", { class: "puce", text: aVenir(m) ? `🎯 ${pluriel(m.objectifs.length, "objectif")}` : (() => { const b = bilanObjectifs(m); return `🎯 ${b.ok}/${b.total} objectif${b.total > 1 ? "s" : ""}`; })() }) : "",
     aVenirVrai(m) ? el("span", { class: "puce compte", text: "⏳ " + compteARebours(m) }) : "",
     !aVenir(m) ? el("span", { class: "puce " + classeResultat(m).toLowerCase(), text: libelleResultat(m) }) : "");
 }
@@ -7684,6 +7703,7 @@ function chronologie(m) {
 function ficheMatchBas(corps, m) {
   const conv = carteConvocation(m);
   if (conv) corps.append(conv);
+  corps.append(carteObjectifsMatch(m));
   if (aUneSeance(m)) corps.append(carteSeance(m));
   else if (!aVenir(m) && +m.bp === +m.bc) corps.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("🥅 Ajouter la séance de tirs au but", () => editerSeanceTab(m), "mini")));
   if (!aVenir(m)) corps.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("📸 Ajouter mes stats de ce match (capture)", () => lancerImportCapture("stats", { matchId: m.id }), "mini gris")));
@@ -8114,7 +8134,8 @@ function badges() {
     B("x2", "✌️", "Premier doublé", maxMatch, 2, premierAvec(2) && premierAvec(2).d),
     B("x3", "🎩", "Premier triplé", maxMatch, 3, premierAvec(3) && premierAvec(3).d),
     B("min1000", "⏱️", "1 000 minutes", tot.min, 1000, null),
-    B("hdm", "⭐", "Homme du match", tot.hdm, 1, (matchs.find(m => m.hdm) || {}).d)
+    B("hdm", "⭐", "Homme du match", tot.hdm, 1, (matchs.find(m => m.hdm) || {}).d),
+    (() => { const p = matchs.filter(m => (m.objectifs || []).length && bilanObjectifs(m).ok === m.objectifs.length); return B("objp", "🎯", "Match parfait (tous mes objectifs)", p.length, 1, p[0] && p[0].d); })()
   ];
 }
 function carteBadges() {
@@ -8245,6 +8266,7 @@ function notifsPerso() {
   if (estCoach()) return out;
   matchsTries(false).filter(aVenirVrai).forEach(m => {
     const j = Math.round((dateObj(m.d) - dateObj(aujourdHui())) / 864e5);
+    if (j >= 0 && j <= 2 && !(m.objectifs || []).length) out.push({ id: "obj-" + m.id, cat: "match", txt: "🎯 Fixe tes objectifs du match", sous: `vs ${m.adv || "?"} ${jourRelatif(m.d)}`, t: Date.now() - 5, nouveau: false, ouvrir: () => { ficheMatch(m.id); editerObjectifsMatch(m); } });
     if (j >= 0 && j <= 2) out.push({ id: "pm-" + m.id, cat: "match", txt: `⚽ Match ${jourRelatif(m.d)}`, sous: `vs ${m.adv || "?"}${m.heure ? " · " + m.heure : ""}${lieuTexte(m) ? " · " + lieuTexte(m) : ""}`, t: Date.now() - 2, nouveau: false, ouvrir: () => ficheMatch(m.id) });
   });
   ETAT.matchs.filter(scoreASaisir).filter(m => (dateObj(aujourdHui()) - dateObj(m.d)) / 864e5 <= 7).forEach(m => out.push({ id: "rs-" + m.id, cat: "resultat", txt: "✏️ Score à saisir", sous: `vs ${m.adv || "?"} · ${court(m.d)}`, t: Date.now() - 3, nouveau: false, ouvrir: () => editerMatch(m) }));
@@ -9271,6 +9293,137 @@ function demanderConvocationDoublon(item, existant, appliquer) {
       bouton("Ignorer cette convocation", () => { ETAT.profil.convIgnorees = { ...(ETAT.profil.convIgnorees || {}), [item.id]: 1 }; sauver(); f.fermer(); }, "lien"));
   }, { critique: true });
   if (fe) fe.convId = item.id;
+}
+
+// =====================================================================
+//  OBJECTIFS DE MATCH : avant le match, le joueur se fixe des objectifs
+//  (marquer, faire une passe, tirs cadrés, minutes, note, gagner…).
+//  Après le match, l'appli vérifie toute seule avec ses vrais chiffres.
+// =====================================================================
+const TYPES_OBJ = {
+  buts: { ico: "⚽", nom: v => `Marquer ${v > 1 ? v + " buts" : "un but"}`, val: 1, max: 10, lire: m => butsDuMatch(m).length },
+  passes: { ico: "🎯", nom: v => `Faire ${v > 1 ? v + " passes décisives" : "une passe décisive"}`, val: 1, max: 10, lire: m => passesDuMatch(m).length },
+  decisif: { ico: "✨", nom: v => `Être décisif (${v > 1 ? v + " buts ou passes" : "un but ou une passe"})`, val: 1, max: 10, lire: m => butsDuMatch(m).length + passesDuMatch(m).length },
+  tirsCadres: { ico: "🥅", nom: v => `${v} tir${v > 1 ? "s" : ""} cadré${v > 1 ? "s" : ""}`, val: 2, max: 20, lire: m => num(m.tirsCadres) },
+  tirs: { ico: "👟", nom: v => `Tenter ${v} tir${v > 1 ? "s" : ""}`, val: 3, max: 30, lire: m => num(m.tirs) },
+  dribbles: { ico: "🌀", nom: v => `Réussir ${v} dribble${v > 1 ? "s" : ""}`, val: 3, max: 30, lire: m => num(m.dribbles) },
+  duels: { ico: "💪", nom: v => `Gagner ${v} duel${v > 1 ? "s" : ""}`, val: 5, max: 50, lire: m => num(m.duels) },
+  passesOk: { ico: "🔁", nom: v => `Réussir ${v} passes`, val: 15, max: 150, lire: m => num(m.passesOk) },
+  minutes: { ico: "⏱️", nom: v => `Jouer ${v} minutes`, val: 45, max: 120, lire: m => (m.statut === "abs" ? 0 : minutesDe(m)) },
+  note: { ico: "⭐", nom: v => `Avoir une note de ${v}/10 ou plus`, val: 7, max: 10, lire: m => num(m.note) },
+  titulaire: { ico: "👕", nom: () => "Être titulaire", lire: m => (m.statut === "tit" ? 1 : m.statut ? 0 : null) },
+  victoire: { ico: "🏆", nom: () => "Gagner le match", lire: m => (resultat(m) === "V" || (resultat(m) === "N" && vainqueurSeance(m) === "nous") ? 1 : 0) },
+  invaincu: { ico: "🛡️", nom: () => "Ne pas perdre", lire: m => (resultat(m) === "D" ? 0 : 1) },
+  cleanSheet: { ico: "🧤", nom: () => "Ne prendre aucun but", lire: m => (+m.bc === 0 ? 1 : 0) },
+  sansCarton: { ico: "🟩", nom: () => "Aucun carton", lire: m => ((+m.cj || 0) + (+m.cr || 0) === 0 ? 1 : 0) },
+  perso: { ico: "📝", nom: (v, o) => o.txt || "Objectif perso", lire: () => null }
+};
+const SANS_VALEUR = new Set(["titulaire", "victoire", "invaincu", "cleanSheet", "sansCarton", "perso"]);
+// statut d'un objectif : "attente" (match pas joué), "ok", "rate", "verifier" (chiffre pas noté)
+function statutObjectif(m, o) {
+  if (aVenir(m)) return "attente";
+  if (o.ok === true) return "ok";
+  if (o.ok === false) return "rate";
+  const T = TYPES_OBJ[o.t]; if (!T) return "verifier";
+  const x = T.lire(m);
+  if (x == null) return "verifier";
+  return SANS_VALEUR.has(o.t) ? (x ? "ok" : "rate") : (x >= (+o.v || T.val || 1) ? "ok" : "rate");
+}
+const nomObjectif = o => { const T = TYPES_OBJ[o.t] || TYPES_OBJ.perso; return `${T.ico} ${T.nom(+o.v || T.val, o)}`; };
+function bilanObjectifs(m) {
+  const l = (m.objectifs || []).map(o => statutObjectif(m, o));
+  return { total: l.length, ok: l.filter(x => x === "ok").length, rate: l.filter(x => x === "rate").length, verifier: l.filter(x => x === "verifier").length };
+}
+
+// ---------- Carte dans la fiche du match ----------
+function carteObjectifsMatch(m) {
+  const objs = m.objectifs || [];
+  const box = el("div", { class: "carte lg obj-match" });
+  if (!objs.length) {
+    box.append(el("h3", { text: "🎯 Mes objectifs du match" }),
+      el("p", { class: "aide", style: "margin:0", text: aVenir(m) ? "Fixe-toi des objectifs avant le match : l'appli vérifiera après avec tes vrais chiffres." : "Tu n'avais pas d'objectifs pour ce match." }),
+      bouton(aVenir(m) ? "＋ Fixer mes objectifs" : "＋ Ajouter des objectifs", () => editerObjectifsMatch(m), "mini vert"));
+    return box;
+  }
+  const b = bilanObjectifs(m);
+  const ICO = { attente: "⏳", ok: "✅", rate: "❌", verifier: "❓" };
+  box.append(el("div", { class: "carte-tete" }, el("h3", { text: "🎯 Mes objectifs du match" }), bouton("Modifier", () => editerObjectifsMatch(m), "mini gris")));
+  if (!aVenir(m)) box.append(el("p", { class: "obj-bilan " + (b.ok === b.total ? "tout" : b.ok ? "partiel" : "aucun"), text: b.ok === b.total ? `🎉 Tous tes objectifs sont réussis (${b.ok}/${b.total}) !` : `${b.ok}/${b.total} objectif${b.total > 1 ? "s" : ""} réussi${b.ok > 1 ? "s" : ""}${b.verifier ? ` · ${b.verifier} à vérifier` : ""}` }));
+  box.append(el("ul", { class: "obj-liste" }, objs.map((o, i) => {
+    const st = statutObjectif(m, o), T = TYPES_OBJ[o.t];
+    const x = T && !SANS_VALEUR.has(o.t) && !aVenir(m) ? T.lire(m) : null;
+    return el("li", { class: "obj-" + st },
+      el("span", { class: "obj-ico", "aria-label": { attente: "En attente", ok: "Réussi", rate: "Raté", verifier: "À vérifier" }[st], text: ICO[st] }),
+      el("span", { class: "i-txt" }, el("b", { text: nomObjectif(o) }), x != null ? el("span", { class: "muted petit", text: `Fait : ${fmt(x)} / ${+o.v || T.val}` }) : st === "verifier" ? el("span", { class: "muted petit", text: o.t === "perso" ? "Réussi ou pas ?" : "Chiffre pas noté : réussi ou pas ?" }) : ""),
+      !aVenir(m) && (st === "verifier" || o.ok != null) ? el("span", { class: "obj-choix" },
+        el("button", { class: "chip", type: "button", "aria-pressed": String(o.ok === true), "aria-label": "Réussi", onclick: () => { o.ok = o.ok === true ? undefined : true; sauver(); rafraichirFeuilles(); toutRafraichir(); } }, "✅"),
+        el("button", { class: "chip", type: "button", "aria-pressed": String(o.ok === false), "aria-label": "Raté", onclick: () => { o.ok = o.ok === false ? undefined : false; sauver(); rafraichirFeuilles(); toutRafraichir(); } }, "❌")) : "");
+  })));
+  return box;
+}
+
+// ---------- Choisir ses objectifs ----------
+function editerObjectifsMatch(m) {
+  let liste = (m.objectifs || []).map(o => ({ ...o }));
+  let garder = false;
+  feuille("🎯 Objectifs du match", (corps, f) => {
+    const zone = el("div", { class: "obj-edit" });
+    const dessiner = () => {
+      zone.textContent = "";
+      zone.append(el("p", { class: "label-mini", text: `Mes objectifs (${liste.length})` }));
+      if (!liste.length) zone.append(el("p", { class: "aide", text: "Choisis 2 ou 3 objectifs dans la liste ci-dessous. Des objectifs précis et atteignables, c'est le mieux." }));
+      liste.forEach((o, i) => {
+        const T = TYPES_OBJ[o.t];
+        const ligne = el("div", { class: "obj-ligne" }, el("b", { text: nomObjectif(o) }));
+        if (!SANS_VALEUR.has(o.t)) ligne.append(el("span", { class: "obj-pas" },
+          el("button", { class: "rond lg mini-rond", type: "button", "aria-label": "Moins", onclick: () => { o.v = Math.max(1, (+o.v || T.val) - 1); dessiner(); } }, "−"),
+          el("span", { class: "obj-val", text: String(+o.v || T.val) }),
+          el("button", { class: "rond lg mini-rond", type: "button", "aria-label": "Plus", onclick: () => { o.v = Math.min(T.max, (+o.v || T.val) + 1); dessiner(); } }, "+")));
+        ligne.append(el("button", { class: "etoile", type: "button", "aria-label": "Retirer", onclick: () => { liste.splice(i, 1); dessiner(); } }, "✕"));
+        zone.append(ligne);
+      });
+      zone.append(el("p", { class: "label-mini", text: "Ajouter un objectif" }),
+        el("div", { class: "puces" }, Object.entries(TYPES_OBJ).filter(([k]) => k !== "perso" && !liste.some(o => o.t === k)).map(([k, T]) => el("button", { class: "chip", type: "button", onclick: () => { liste.push({ t: k, ...(SANS_VALEUR.has(k) ? {} : { v: T.val }) }); dessiner(); } }, `${T.ico} ${T.nom(T.val, {}).replace(/^(Marquer|Faire|Tenter|Réussir|Gagner|Jouer|Avoir une note de) /, x => x)}`))));
+      const perso = el("input", { class: "champ", type: "text", maxlength: "60", placeholder: "Objectif perso (ex. parler à mes coéquipiers)" });
+      zone.append(el("div", { class: "rangee" }, perso, bouton("Ajouter", () => { const t = perso.value.trim(); if (!t) return; liste.push({ t: "perso", txt: t }); dessiner(); }, "mini gris")));
+      const raccourcis = [];
+      const precedent = matchsTries().find(x => x.id !== m.id && (x.objectifs || []).length);
+      if ((ETAT.profil.objectifsMatch || []).length) raccourcis.push(bouton("⭐ Mes objectifs habituels", () => { liste = ETAT.profil.objectifsMatch.map(o => ({ t: o.t, v: o.v, txt: o.txt })); dessiner(); }, "mini gris"));
+      if (precedent) raccourcis.push(bouton("↩︎ Comme le match précédent", () => { liste = precedent.objectifs.map(o => ({ t: o.t, v: o.v, txt: o.txt })); dessiner(); }, "mini gris"));
+      if (raccourcis.length) zone.append(el("div", { class: "rangee" }, raccourcis));
+      const c = el("input", { type: "checkbox", id: "objGarder" }); c.checked = garder; c.addEventListener("change", () => { garder = c.checked; });
+      zone.append(el("label", { class: "coche", for: "objGarder" }, c, " Garder comme mes objectifs habituels"));
+    };
+    dessiner();
+    corps.append(zone, el("div", { class: "form-actions" },
+      (m.objectifs || []).length ? bouton("Tout retirer", () => { delete m.objectifs; noter("Modifié", `Objectifs retirés · ${matchLabel(m)}`); sauver(); f.fermer(); toutRafraichir(); rafraichirFeuilles(); }, "lien danger gauche") : "",
+      bouton("Enregistrer", () => {
+        if (liste.length) m.objectifs = liste.map(o => { const x = { t: o.t }; if (o.v != null) x.v = +o.v; if (o.txt) x.txt = o.txt; if (o.ok != null) x.ok = o.ok; return x; }); else delete m.objectifs;
+        if (garder && liste.length) ETAT.profil.objectifsMatch = liste.map(o => ({ t: o.t, ...(o.v != null ? { v: +o.v } : {}), ...(o.txt ? { txt: o.txt } : {}) }));
+        noter("Modifié", `Objectifs du match · ${matchLabel(m)}`);
+        sauver(); f.fermer(); toutRafraichir(); rafraichirFeuilles();
+        toast(liste.length ? `🎯 ${pluriel(liste.length, "objectif")} pour ce match` : "Objectifs retirés");
+      }, "mini vert")));
+  });
+}
+
+// ---------- Bilan dans les stats ----------
+function carteBilanObjectifs(f) {
+  const ms = matchsJouesChrono().filter(m => matchOk(m, f || {}) && (m.objectifs || []).length);
+  const box = el("section", { class: "carte lg" }, el("h2", { text: "🎯 Mes objectifs de match" }));
+  if (!ms.length) { box.append(el("p", { class: "vide", text: "Fixe-toi des objectifs dans la fiche de ton prochain match : ton taux de réussite apparaîtra ici." })); return box; }
+  let ok = 0, tot = 0, parfaits = 0;
+  const parType = {};
+  ms.forEach(m => { const b = bilanObjectifs(m); ok += b.ok; tot += b.ok + b.rate; if (b.total && b.ok === b.total) parfaits++; (m.objectifs || []).forEach(o => { const st = statutObjectif(m, o); if (st !== "ok" && st !== "rate") return; const k = o.t === "perso" ? "perso" : o.t; const x = parType[k] = parType[k] || { ok: 0, tot: 0 }; x.tot++; if (st === "ok") x.ok++; }); });
+  let serie = 0; for (let i = ms.length - 1; i >= 0; i--) { const b = bilanObjectifs(ms[i]); if (b.total && b.ok === b.total) serie++; else break; }
+  const types = Object.entries(parType).sort((a, b) => b[1].ok / b[1].tot - a[1].ok / a[1].tot);
+  box.append(grilleStats([["Réussite", tot ? Math.round(100 * ok / tot) + " %" : "–"], ["Objectifs réussis", `${ok}/${tot}`], ["Matchs parfaits", parfaits], ["Série en cours", serie]]));
+  if (types.length) box.append(el("ul", { class: "obj-types" }, types.map(([k, x]) => el("li", {},
+    el("span", { text: `${(TYPES_OBJ[k] || TYPES_OBJ.perso).ico} ${k === "perso" ? "Objectifs perso" : (TYPES_OBJ[k].nom(TYPES_OBJ[k].val || 1, {}).replace(/\d+\s?/, "").replace(/^\w/, c => c.toUpperCase()))}` }),
+    el("span", { class: "jauge" }, el("span", { style: `width:${Math.round(100 * x.ok / x.tot)}%;background:var(--accent)` })),
+    el("b", { text: `${x.ok}/${x.tot}` })))));
+  if (types.length > 1) { const pire = types[types.length - 1]; if (pire[1].ok / pire[1].tot < .5) box.append(el("p", { class: "aide", text: `💡 Ton objectif le plus difficile : ${(TYPES_OBJ[pire[0]] || TYPES_OBJ.perso).ico} ${pire[0] === "perso" ? "tes objectifs perso" : TYPES_OBJ[pire[0]].nom(TYPES_OBJ[pire[0]].val || 1, {}).toLowerCase()}. Travaille-le à l'entraînement !` })); }
+  return box;
 }
 
 // =====================================================================
