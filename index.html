@@ -1203,6 +1203,11 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 .conv-roles .chip { min-height: 36px; padding: 6px 10px; font-size: .8rem; }
 .conv-liste .etoile { grid-row: 1; grid-column: 3; font-size: 1rem; }
 .conv-moi { margin: 0; font-weight: 700; } .conv-moi.absent { color: var(--gold); font-weight: 600; }
+
+.conv-liste li.non-conv { opacity: .6; }
+.conv-msg { margin-top: 6px; }
+.conv-msg details summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; font-weight: 700; }
+.conv-msg p { margin: 4px 0; }
 </style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
@@ -6646,6 +6651,7 @@ function rendreMessages(v) {
   v.append(el("header", { class: "top" }, el("h1", { text: "Messages 💬" })));
   if (!coach && statutJoueur() !== "membre") { v.append(carte(null, messageStatut(statutJoueur()), bouton("👥 Mon équipe", () => ouvrirSection("equipe"), "mini"))); return; }
   if (coach && !EQ.teamId) { v.append(carte(null, el("p", { class: "vide", text: "Crée d'abord ton équipe depuis l'accueil." }))); return; }
+  if (coach) v.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("📋 Nouvelle convocation", () => feuilleConvocationCoach(), "mini vert"), bouton("📸 Convocation en photo", () => lancerImportCapture("convocation"), "mini gris")));
   v.append(el("p", { class: "aide centre", text: "🔒 Les messages sont visibles par toute l'équipe et son staff : il n'y a pas de messages privés." }));
   const ms = messagesEquipe();
   const fil = el("div", { class: "fil" });
@@ -6675,7 +6681,8 @@ function bulleMessage(m) {
       x.date ? el("p", { text: "📅 " + joli(x.date) }) : null,
       x.rdv ? el("p", { text: "🕒 Rendez-vous : " + x.rdv }) : null,
       x.heure ? el("p", { text: "⚽ Match : " + x.heure }) : null,
-      x.lieu ? el("p", { text: "📍 " + x.lieu }) : null), blocPresence(m.item || m));
+      x.lieuRdv ? el("p", { text: "🚩 RDV : " + x.lieuRdv }) : null,
+      x.lieu ? el("p", { text: "📍 " + x.lieu }) : null, detailsConvocation(x)), blocPresence(m.item || m));
   }
   if (m.texte) b.append(el("p", { class: "msg-txt", text: m.texte }));
   b.append(barreReactions(m));
@@ -6728,7 +6735,7 @@ function composeur() {
   const zoneMatch = el("div", { class: "form", hidden: true });
   if (coach) {
     const kinds = el("div", { class: "filtres", role: "group", "aria-label": "Type de message" });
-    KINDS.forEach(([k, ico, l]) => { const b = el("button", { class: "chip", type: "button", "aria-pressed": String(st.kind === k) }, `${ico} ${l}`); b.addEventListener("click", () => { st.kind = k; kinds.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b))); zoneMatch.hidden = k !== "match"; }); kinds.append(b); });
+    KINDS.forEach(([k, ico, l]) => { const b = el("button", { class: "chip", type: "button", "aria-pressed": String(st.kind === k) }, `${ico} ${l}`); b.addEventListener("click", () => { if (k === "match") { feuilleConvocationCoach(); return; } st.kind = k; kinds.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b))); zoneMatch.hidden = k !== "match"; }); kinds.append(b); });
     const ch = (k, l, type = "text", ph = "") => { const i = el("input", { class: "champ", type, placeholder: ph }); i.addEventListener("input", () => { st.match[k] = i.value.trim(); }); return el("label", { class: "ch" }, l, i); };
     const dom = el("select", { class: "champ" }, el("option", { value: "1" }, "À domicile"), el("option", { value: "0" }, "À l'extérieur"));
     dom.addEventListener("change", () => { st.match.domicile = dom.value === "1"; });
@@ -6892,6 +6899,7 @@ function majBadges() {
 // Appelé à chaque changement des données d'équipe (en direct)
 let notifsConnues = null;
 function apresChangementEquipe() {
+  try { syncConvocations(); } catch (e) {}
   const ids = new Set(notifications().filter(n => n.nouveau).map(n => n.id));
   if (notifsConnues) { const neuves = notifications().filter(n => n.nouveau && !notifsConnues.has(n.id)); if (neuves.length && document.visibilityState === "visible") toast("🔔 " + neuves[0].txt + (neuves[0].sous ? " · " + String(neuves[0].sous).slice(0, 40) : ""), 4000); }
   notifsConnues = ids;
@@ -7073,7 +7081,7 @@ async function lancerImportCapture(mode, ctx) {
   if (!mode) {
     feuille("Importer une capture", (corps, f) => {
       corps.append(el("p", { text: "📸 Qu'est-ce qu'il y a sur ta capture ?" }),
-        el("div", { class: "capt-modes" }, Object.entries(MODES_CAPTURE).map(([k, x]) => el("button", { class: "carte lg capt-mode", type: "button", onclick: () => { if (ia.ocr) { f.fermer(); lancerImportCapture(k, ctx); } else choisir(k, f); } },
+        el("div", { class: "capt-modes" }, Object.entries(MODES_CAPTURE).filter(([k]) => k !== "convocation" || estCoach()).map(([k, x]) => el("button", { class: "carte lg capt-mode", type: "button", onclick: () => { if (ia.ocr) { f.fermer(); lancerImportCapture(k, ctx); } else choisir(k, f); } },
           el("span", { class: "capt-mode-ico", "aria-hidden": "true", text: x.ico }), el("span", { class: "i-txt" }, el("b", { text: x.titre }), el("span", { class: "muted petit", text: x.aide })), el("span", { class: "chev", "aria-hidden": "true", text: "›" })))),
         el("p", { class: "aide", text: `Jusqu'à ${pluriel(max, "image")} à la fois. Rien n'est ajouté avant que tu aies vérifié.` }),
         "");
@@ -7670,7 +7678,6 @@ function chronologie(m) {
 function ficheMatchBas(corps, m) {
   const conv = carteConvocation(m);
   if (conv) corps.append(conv);
-  else if (aVenir(m)) corps.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("📋 Ajouter la convocation (photo)", () => lancerImportCapture("convocation", { matchId: m.id }), "mini")));
   if (aUneSeance(m)) corps.append(carteSeance(m));
   else if (!aVenir(m) && +m.bp === +m.bc) corps.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("🥅 Ajouter la séance de tirs au but", () => editerSeance(m), "mini")));
   if (!aVenir(m)) corps.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("📸 Ajouter mes stats de ce match (capture)", () => lancerImportCapture("stats", { matchId: m.id }), "mini gris")));
@@ -8149,7 +8156,6 @@ function rendreEquipeJoueur(v) {
       el("span", { class: "eff-num", text: j.numero ? String(j.numero) : "–" }), el("span", { class: "i-txt" }, el("b", { text: nomPublic(j) }), el("span", { class: "muted petit", text: j.poste || "Poste non renseigné" }))))) : el("p", { class: "vide", text: "L'effectif s'affiche quand le coach a validé les joueurs." }),
       el("p", { class: "aide", text: "Seuls le prénom, le numéro et le poste sont partagés : jamais les photos ni les dates de naissance." })));
   }
-  v.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("📋 Ajouter une convocation (photo)", () => lancerImportCapture("convocation"), "mini vert")));
   v.append(el("div", { class: "menu" }, [["calendrier", "📅", "Calendrier"], ["travail", "📋", "Travail du coach"], ["messages", "💬", "Messages"], ["entrainement", "🏋️", "Entraînement"]].map(([k, ico, nom]) => el("button", { class: "lg", type: "button", onclick: () => allerVue(k) }, el("span", { class: "ico", text: ico }), nom))));
 }
 function blocPresence(m) {
@@ -8935,6 +8941,8 @@ Réponds UNIQUEMENT avec ce JSON :
 const heureOk = h => { const r = /^(\d{1,2})[:hH](\d{2})$/.exec(String(h || "").trim()); return r && +r[1] < 24 ? `${r[1].padStart(2, "0")}:${r[2]}` : ""; };
 function verifierConvocation(r, ctx) {
   r = r || {};
+  // chez le coach : la photo remplit la convocation à envoyer à l'équipe
+  if (estCoach()) { feuilleConvocationCoach({ ...r, d: dateOk(r.d), heure: heureOk(r.heure), rdv: heureOk(r.rdv) }); return; }
   const remarque = typeof r.remarque === "string" ? r.remarque.slice(0, 300) : "";
   const joueurs = (Array.isArray(r.convoques) ? r.convoques : []).slice(0, 30).filter(j => j && j.nom).map(j => ({
     nom: texteCourt(j.nom, 40), numero: num(j.numero) != null && num(j.numero) < 100 ? Math.round(num(j.numero)) : null, poste: texteCourt(j.poste, 20),
@@ -9007,7 +9015,7 @@ function carteConvocation(m) {
   const conv = String(m.convoques || "").split("\n").map(x => x.trim()).filter(Boolean);
   if (!conv.length && !m.rdv) return "";
   return el("div", { class: "carte lg" },
-    el("div", { class: "carte-tete" }, el("h3", { text: "📋 Convocation" }), aVenir(m) ? bouton("📸 Mettre à jour", () => lancerImportCapture("convocation", { matchId: m.id }), "mini gris") : ""),
+    el("div", { class: "carte-tete" }, el("h3", { text: "📋 Convocation" }), m.convId ? el("span", { class: "puce", text: "Envoyée par le coach" }) : ""),
     m.rdv || m.lieuRdv ? el("p", { style: "margin:0", text: `⏰ Rendez-vous${m.rdv ? " à " + m.rdv : ""}${m.lieuRdv ? " · " + m.lieuRdv : ""}` }) : "",
     conv.length ? el("p", { class: "aide", style: "margin:0", text: `${pluriel(conv.length, "joueur convoqué", "joueurs convoqués")}${conv.some(n => estMoi(n.replace(/^\d+\s*/, ""))) ? " · tu en fais partie ✅" : ""}` }) : "",
     conv.length && !m.titulaires && !m.remplacants ? el("ul", { class: "compo-liste" }, conv.map(n => el("li", { class: estMoi(n.replace(/^\d+\s*/, "")) ? "moi" : "", text: n }))) : "");
@@ -9037,6 +9045,118 @@ function convocationDepuisTexte(txt) {
   return out;
 }
 LECTURE_OCR.convocation = convocationDepuisTexte;
+
+// =====================================================================
+//  CONVOCATIONS DU COACH : le coach prépare la convocation (à la main ou
+//  avec une photo), choisit les convoqués et la composition, l'envoie.
+//  Chez chaque joueur, le match à venir se crée tout seul.
+// =====================================================================
+const ROLES_CONV = [["conv", "Convoqué"], ["tit", "Titulaire"], ["rem", "Remplaçant"]];
+function feuilleConvocationCoach(pre = {}) {
+  if (!EQ.teamId) { toast("Crée d'abord ton équipe."); return; }
+  const st = { adv: pre.adv || "", date: pre.d || "", heure: pre.heure || "", rdv: pre.rdv || "", lieuRdv: pre.lieuRdv || "", lieu: [pre.stade, pre.ville].filter(Boolean).join(", "), domicile: pre.lieu !== "ext", texte: "" };
+  // effectif de l'équipe + joueurs lus sur la photo
+  const lus = Array.isArray(pre.convoques) ? pre.convoques : [];
+  const equipe = joueursValides().sort((a, b) => (+a.numero || 99) - (+b.numero || 99));
+  const liste = equipe.map(j => ({ id: j.id, nom: nomPublic(j), numero: j.numero ? +j.numero : null, role: "" }));
+  lus.forEach(x => {
+    const nom = String(x.nom || "").trim(); if (!nom) return;
+    const role = x.titulaire === true || x.role === "tit" ? "tit" : x.titulaire === false || x.role === "rem" ? "rem" : "conv";
+    const proche = nomLePlusProche(nom, liste.map(l => l.nom), .7);
+    const ligne = proche ? liste.find(l => l.nom === proche) : null;
+    if (ligne) ligne.role = role;
+    else liste.push({ id: null, nom: nom.slice(0, 40), numero: num(x.numero) != null ? Math.round(num(x.numero)) : null, role });
+  });
+  feuille("📋 Nouvelle convocation", (corps, f) => {
+    const champ = (lab, k, type = "text", ph = "") => { const i = el("input", { class: "champ", type, value: st[k] || "", placeholder: ph }); i.addEventListener("input", () => { st[k] = i.value.trim(); }); return el("label", { class: "ch" }, lab, i); };
+    const dom = el("select", { class: "champ" }, el("option", { value: "1" }, "À domicile"), el("option", { value: "0" }, "À l'extérieur"));
+    dom.value = st.domicile ? "1" : "0"; dom.addEventListener("change", () => { st.domicile = dom.value === "1"; });
+    const zone = el("ul", { class: "conv-liste" });
+    const titre = el("h3");
+    const dessiner = () => {
+      zone.textContent = "";
+      const n = liste.filter(l => l.role).length, t = liste.filter(l => l.role === "tit").length, r = liste.filter(l => l.role === "rem").length;
+      titre.textContent = `👕 Joueurs convoqués : ${n}${t || r ? ` (${t} titulaires, ${r} remplaçants)` : ""}`;
+      if (!liste.length) zone.append(el("li", { class: "vide", text: "Aucun joueur validé dans l'équipe. Ajoute des noms ci-dessous." }));
+      liste.forEach((l, i) => zone.append(el("li", { class: l.role ? "" : "non-conv" },
+        el("span", { class: "eff-num", text: l.numero != null ? String(l.numero) : "–" }),
+        el("span", { class: "conv-nom" }, el("b", { text: l.nom }), l.id ? "" : el("span", { class: "muted petit", text: "pas dans l'appli" })),
+        el("div", { class: "conv-roles", role: "group", "aria-label": `Convocation de ${l.nom}` }, ROLES_CONV.map(([k, lab]) => el("button", { class: "chip", type: "button", "aria-pressed": String(l.role === k), onclick: () => { l.role = l.role === k ? "" : k; dessiner(); } }, lab))),
+        l.id ? "" : el("button", { class: "etoile", type: "button", "aria-label": `Retirer ${l.nom}`, onclick: () => { liste.splice(i, 1); dessiner(); } }, "✕"))));
+    };
+    const ajout = el("input", { class: "champ", type: "text", placeholder: "Ajouter un joueur (ex. 14 Ilyes)" });
+    const ajouter = () => { const v = ajout.value.trim(); if (!v) return; const m = /^(\d{1,2})\s+(.+)$/.exec(v); liste.push({ id: null, nom: (m ? m[2] : v).slice(0, 40), numero: m ? +m[1] : null, role: "conv" }); ajout.value = ""; dessiner(); };
+    ajout.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); ajouter(); } });
+    const msg = el("textarea", { class: "champ", rows: "2", maxlength: "500", placeholder: "Message aux joueurs (facultatif) : tenue, gourde…" });
+    msg.addEventListener("input", () => { st.texte = msg.value.trim(); });
+    corps.append(
+      bouton("📸 Remplir avec une photo de la convocation", () => { f.fermer(); lancerImportCapture("convocation"); }, "mini gris capt-gros"),
+      champ("Adversaire", "adv", "text", "Ex. Moirans FC"),
+      el("div", { class: "grille" }, champ("Date", "date", "date"), el("label", { class: "ch" }, "Lieu du match", dom)),
+      el("div", { class: "grille" }, champ("Rendez-vous", "rdv", "time"), champ("Coup d'envoi", "heure", "time")),
+      champ("Lieu du rendez-vous", "lieuRdv", "text", "Ex. Parking du stade"), champ("Stade", "lieu", "text", "Ex. Stade de Coublevie"),
+      titre,
+      el("div", { class: "rangee" }, bouton("Tout le monde convoqué", () => { liste.forEach(l => { if (!l.role) l.role = "conv"; }); dessiner(); }, "mini gris"), bouton("Personne", () => { liste.forEach(l => { l.role = ""; }); dessiner(); }, "lien")),
+      zone,
+      el("div", { class: "rangee" }, ajout, bouton("Ajouter", ajouter, "mini gris")),
+      el("p", { class: "aide", text: "Touche Titulaire ou Remplaçant pour faire la composition. Les joueurs non convoqués voient qu'ils ne sont pas dans la liste." }),
+      msg,
+      bouton("📤 Envoyer la convocation", async () => {
+        if (!st.adv || !st.date) { toast("Indique l'adversaire et la date du match."); return; }
+        const convoques = liste.filter(l => l.role).map(l => ({ ...(l.id ? { id: l.id } : {}), nom: l.nom, ...(l.numero != null ? { numero: l.numero } : {}), role: l.role }));
+        if (!convoques.length && !await new Promise(ok => confirmer("Envoyer sans aucun joueur convoqué ?", () => ok(true)))) return;
+        const id = await publier({ type: "msg", kind: "match", texte: st.texte, match: { adv: st.adv, date: st.date, heure: st.heure, rdv: st.rdv, lieuRdv: st.lieuRdv, lieu: st.lieu, domicile: st.domicile, convoques }, cible: { mode: "equipe" } });
+        if (id) { f.fermer(); nettoyerMessages(); toast("📤 Convocation envoyée : le match s'ajoute chez les joueurs.", 4500); allerVue("c-messages"); }
+      }, "mini vert capt-gros"));
+    dessiner();
+  }, { critique: true });
+}
+
+// détails de la convocation dans le message (fil de l'équipe)
+function detailsConvocation(x) {
+  const c = x && Array.isArray(x.convoques) ? x.convoques : [];
+  if (!c.length) return "";
+  const ligne = j => `${j.numero != null ? j.numero + " " : ""}${j.nom}`;
+  const tit = c.filter(j => j.role === "tit"), rem = c.filter(j => j.role === "rem"), conv = c.filter(j => j.role !== "tit" && j.role !== "rem");
+  const moi = !estCoach() && (c.find(j => j.id === EQ.moi) || c.find(j => estMoi(j.nom)));
+  return el("div", { class: "conv-msg" },
+    !estCoach() ? el("p", { class: "conv-moi" + (moi ? "" : " absent"), text: moi ? (moi.role === "tit" ? "✅ Tu es convoqué, titulaire !" : moi.role === "rem" ? "✅ Tu es convoqué, remplaçant." : "✅ Tu es convoqué.") : "Tu n'es pas dans la liste pour ce match." }) : "",
+    el("details", {}, el("summary", { text: `👕 ${pluriel(c.length, "joueur convoqué", "joueurs convoqués")}` }),
+      tit.length ? el("p", {}, el("b", { text: "Titulaires : " }), tit.map(ligne).join(", ")) : "",
+      rem.length ? el("p", {}, el("b", { text: "Remplaçants : " }), rem.map(ligne).join(", ")) : "",
+      conv.length ? el("p", {}, el("b", { text: tit.length || rem.length ? "Autres convoqués : " : "Convoqués : " }), conv.map(ligne).join(", ")) : ""));
+}
+
+// Chez le joueur : chaque convocation reçue crée ou met à jour le match à venir
+function syncConvocations() {
+  if (estCoach() || statutJoueur() !== "membre") return;
+  const limite = (() => { const d = dateObj(aujourdHui()); d.setDate(d.getDate() - 14); return isoDe(d); })();
+  let change = false;
+  itemsVus(["msg"]).filter(i => i.kind === "match" && i.match && i.match.date && i.match.date >= limite).forEach(i => {
+    const x = i.match, version = i.modifie || i.cree || 1;
+    let m = ETAT.matchs.find(y => y.convId === i.id);
+    if (m && m.convMaj === version) return;
+    if (!m) m = ETAT.matchs.find(y => !y.convId && y.d === x.date && (aVenir(y) || cleClub(y.adv) === cleClub(x.adv)));
+    if (m && !aVenir(m)) { m.convId = i.id; m.convMaj = version; change = true; return; } // déjà joué : on ne touche pas au résultat
+    const nouveau = !m;
+    if (!m) { m = { id: uid(), comp: "champ", club: ETAT.profil.club || (EQ.equipe && EQ.equipe.club) || "" }; ETAT.matchs.push(m); }
+    m.convId = i.id; m.convMaj = version; m.d = x.date; if (x.adv) m.adv = x.adv; m.lieu = x.domicile === false ? "ext" : "dom";
+    ["heure", "rdv", "lieuRdv"].forEach(k => { if (x[k]) m[k] = x[k]; });
+    if (x.lieu) m.stade = x.lieu;
+    const c = Array.isArray(x.convoques) ? x.convoques : [];
+    if (c.length) {
+      const ligne = j => `${j.numero != null ? j.numero + " " : ""}${j.nom}`;
+      m.convoques = c.map(ligne).join("\n");
+      const tit = c.filter(j => j.role === "tit"), rem = c.filter(j => j.role === "rem");
+      if (tit.length || rem.length) { m.titulaires = tit.map(ligne).join("\n"); m.remplacants = rem.map(ligne).join("\n"); }
+      const moi = c.find(j => j.id === EQ.moi) || c.find(j => estMoi(j.nom));
+      m.statut = moi ? (moi.role === "rem" ? "rem" : "tit") : "abs";
+    } else if (!m.statut) m.statut = "tit";
+    noter(nouveau ? "Ajouté" : "Modifié", `Convocation du coach · ${matchLabel(m)}`);
+    change = true;
+  });
+  if (change) { sauver(); toutRafraichir(); }
+}
 
 // =====================================================================
 //  Démarrage : profil local tout de suite, puis compte en ligne,

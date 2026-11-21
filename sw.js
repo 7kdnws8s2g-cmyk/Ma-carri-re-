@@ -1,7 +1,7 @@
 // Service worker de « Ma carrière » : l'appli s'ouvre même sans connexion.
 // La page est cherchée d'abord sur internet (pour avoir la dernière version),
 // et la copie gardée sert quand il n'y a pas de réseau.
-const CACHE = "ma-carriere-v8";
+const CACHE = "ma-carriere-v9";
 const FICHIERS = ["./", "./index.html", "./manifest.json", "./icone-180.png", "./icone-192.png", "./icone-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));
