@@ -3022,7 +3022,7 @@ function ficheMatch(id) {
         el("b", { style: "font-size:1.1rem", text: m.adv || "Adversaire" })),
       m.avant ? el("span", { class: "petit muted", text: `Avant le match : ${m.avant}` }) : null,
       el("div", { class: "puces", style: "justify-content:center" },
-        r ? el("span", { class: "puce " + r.toLowerCase(), text: r === "V" ? "Victoire" : r === "N" ? "Nul" : "Défaite" }) : null,
+        r ? el("span", { class: "puce " + classeResultat(m).toLowerCase(), text: libelleResultat(m) }) : null,
         el("span", { class: "puce", text: STATUTS.find(s => s[0] === (m.statut || "tit"))[1] }),
         joue(m) && !aVenir(m) ? el("span", { class: "puce", text: `⏱ ${minutesDe(m)} min` }) : null,
         nb ? el("span", { class: "puce or", text: `⚽ ${nb}${nb >= 2 ? " · " + nomMulti(nb) : ""}` }) : null,
@@ -3408,7 +3408,7 @@ function itemMatch(m) {
     el("span", { class: "i-txt" },
       el("b", { text: `${m.lieu === "ext" ? "à" : "vs"} ${m.adv || "Adversaire"}` }),
       el("span", { text: [court(m.d), NOM_COMP[m.comp], m.tour, nb ? `⚽ ${nb}` : null, np ? `🎯 ${np}` : null, m.hdm ? "🏅" : null].filter(Boolean).join(" · ") })),
-    aVenir(m) ? el("span", { class: "score", text: "à venir" }) : el("span", { class: "score " + r, text: `${m.bp}-${m.bc}${aUneSeance(m) ? ` (${etatSeance(m.seance).ga}-${etatSeance(m.seance).gb} tab)` : ""}` })));
+    aVenir(m) ? el("span", { class: "score", text: "à venir" }) : el("span", { class: "score " + classeResultat(m), text: `${m.bp}-${m.bc}${aUneSeance(m) ? ` (${etatSeance(m.seance).ga}-${etatSeance(m.seance).gb} tab)` : ""}` })));
 }
 function selectFiltre(id, label, options, valeur, onchange) {
   const s = el("select", { class: "champ", id, "aria-label": label });
@@ -7494,7 +7494,7 @@ function carteMatchAffiche(m, { titre } = {}) {
     el("span", { class: "affiche-infos", text: [m.d ? joli(m.d) : "Date à préciser", lieuTexte(m) || (ext ? "À l'extérieur" : "À domicile"), aVenir(m) && m.rdv ? `RDV ${m.rdv}` : null].filter(Boolean).join(" · ") }),
     aVenir(m) && m.statut === "abs" && m.convoques ? el("span", { class: "puce", text: "Pas convoqué" }) : "",
     aVenirVrai(m) ? el("span", { class: "puce compte", text: "⏳ " + compteARebours(m) }) : "",
-    !aVenir(m) ? el("span", { class: "puce " + resultat(m).toLowerCase(), text: { V: "Victoire", N: "Nul", D: "Défaite" }[resultat(m)] + (aUneSeance(m) ? ` · ${texteSeance(m)}` : "") }) : "");
+    !aVenir(m) ? el("span", { class: "puce " + classeResultat(m).toLowerCase(), text: libelleResultat(m) }) : "");
 }
 
 // ---------- Direct : score tenu à la main ----------
@@ -8813,22 +8813,36 @@ function feuilleViaClaude(mode, ctx) {
 //  direct, vainqueur calculé (5 tirs puis mort subite). Mes tirs vont
 //  dans mes stats de penaltys (sans compter comme des buts).
 // =====================================================================
-function etatSeance(s) {
+// final = séance enregistrée (pas en cours de saisie) : si les deux équipes ont tiré autant
+// de fois et que le score est différent, celui qui a le plus marqué a gagné.
+function etatSeance(s, final = true) {
   const a = (s && s.nous) || [], b = (s && s.eux) || [];
-  const ga = a.filter(x => x.ok).length, gb = b.filter(x => x.ok).length, na = a.length, nb = b.length;
+  let ga = a.filter(x => x.ok).length, gb = b.filter(x => x.ok).length;
+  const na = a.length, nb = b.length, N = +(s && s.nb) || 5;
   let vainqueur = null;
-  if (na <= 5 && nb <= 5) {
-    if (ga + (5 - na) < gb) vainqueur = "eux";
-    else if (gb + (5 - nb) < ga) vainqueur = "nous";
+  if (na <= N && nb <= N) {
+    if (ga + (N - na) < gb) vainqueur = "eux";
+    else if (gb + (N - nb) < ga) vainqueur = "nous";
   }
-  if (!vainqueur && na === nb && na >= 5 && ga !== gb) vainqueur = ga > gb ? "nous" : "eux";
+  if (!vainqueur && na === nb && na >= N && ga !== gb) vainqueur = ga > gb ? "nous" : "eux";
+  // seulement le score de la séance (sans le détail des tirs)
+  if (!na && !nb && s && s.sn != null && s.se != null) { ga = +s.sn; gb = +s.se; if (ga !== gb) vainqueur = ga > gb ? "nous" : "eux"; }
+  if (!vainqueur && s && s.gagnant) vainqueur = s.gagnant;
+  if (!vainqueur && final && (na || nb) && na === nb && ga !== gb) vainqueur = ga > gb ? "nous" : "eux";
   const premier = (s && s.premier) || "nous";
   const tour = premier === "nous" ? (na === nb ? "nous" : "eux") : (na === nb ? "eux" : "nous");
-  return { ga, gb, na, nb, vainqueur, fini: !!vainqueur, tour };
+  return { ga, gb, na, nb, N, vainqueur, fini: !!vainqueur, tour };
 }
-const aUneSeance = m => !!(m && m.seance && ((m.seance.nous || []).length || (m.seance.eux || []).length));
+const aUneSeance = m => !!(m && m.seance && ((m.seance.nous || []).length || (m.seance.eux || []).length || (m.seance.sn != null && m.seance.se != null) || m.seance.gagnant));
 const vainqueurSeance = m => (aUneSeance(m) ? etatSeance(m.seance).vainqueur : null);
 const texteSeance = m => { if (!aUneSeance(m)) return ""; const e = etatSeance(m.seance); return `tab ${e.ga}-${e.gb}${e.vainqueur ? (e.vainqueur === "nous" ? " ✅" : " ❌") : ""}`; };
+// libellé et couleur du résultat : un nul gagné ou perdu aux tirs au but est affiché comme tel
+function libelleResultat(m) {
+  const r = resultat(m), v = r === "N" && vainqueurSeance(m);
+  if (v) { const e = etatSeance(m.seance); return `${v === "nous" ? "Victoire" : "Défaite"} aux tirs au but (${e.ga}-${e.gb})`; }
+  return { V: "Victoire", N: "Nul", D: "Défaite" }[r] || "";
+}
+function classeResultat(m) { const r = resultat(m), v = r === "N" && vainqueurSeance(m); return v ? (v === "nous" ? "V" : "D") : r; }
 
 function tireursPossibles(m) {
   const noms = String(m.titulaires || "").split("\n").concat(String(m.remplacants || "").split("\n"))
@@ -8844,22 +8858,38 @@ function editerSeanceTab(m) {
     const zone = el("div", { class: "seance" });
     const dessiner = () => {
       zone.textContent = "";
-      const e = etatSeance(s);
+      const e = etatSeance(s, false);
       const pastilles = (liste, n) => el("div", { class: "seance-points", "aria-hidden": "true" },
-        Array.from({ length: Math.max(5, n) }, (_, i) => el("span", { class: "sp " + (i < liste.length ? (liste[i].ok ? "ok" : "rate") : "vide"), text: i < liste.length ? (liste[i].ok ? "✓" : "✕") : "" })));
+        Array.from({ length: Math.max(e.N, n) }, (_, i) => el("span", { class: "sp " + (i < liste.length ? (liste[i].ok ? "ok" : "rate") : "vide"), text: i < liste.length ? (liste[i].ok ? "✓" : "✕") : "" })));
       zone.append(el("div", { class: "carte lg seance-tableau" },
         el("div", { class: "seance-ligne" }, ecusson(nous), el("b", { class: "seance-nom", text: nous }), pastilles(s.nous, Math.max(s.nous.length, s.eux.length)), el("span", { class: "seance-score", text: String(e.ga) })),
         el("div", { class: "seance-ligne" }, ecusson(eux), el("b", { class: "seance-nom", text: eux }), pastilles(s.eux, Math.max(s.nous.length, s.eux.length)), el("span", { class: "seance-score", text: String(e.gb) })),
         el("p", { class: "sr-only", text: `Tirs au but : ${nous} ${e.ga}, ${eux} ${e.gb}` })));
-      if (!s.nous.length && !s.eux.length) zone.append(el("div", { class: "carte lg" }, el("b", { text: "Qui tire en premier ?" }),
-        el("div", { class: "puces" }, [["nous", nous], ["eux", eux]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(s.premier === k), onclick: () => { s.premier = k; dessiner(); } }, l)))));
-      if (e.fini) {
+      if (!s.nous.length && !s.eux.length) zone.append(el("div", { class: "carte lg" },
+        el("b", { text: "Comment veux-tu la noter ?" }),
+        el("div", { class: "puces" }, [["tirs", "Tir par tir"], ["score", "Juste le score"]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String((s.mode || "tirs") === k), onclick: () => { s.mode = k; dessiner(); } }, l))),
+        (s.mode || "tirs") === "tirs" ? el("div", {},
+          el("p", { class: "label-mini", text: "Tirs par équipe avant la mort subite" }),
+          el("div", { class: "puces" }, [3, 5].map(n => el("button", { class: "chip", type: "button", "aria-pressed": String(e.N === n), onclick: () => { s.nb = n; dessiner(); } }, `${n} tirs`))),
+          el("p", { class: "label-mini", text: "Qui tire en premier ?" }),
+          el("div", { class: "puces" }, [["nous", nous], ["eux", eux]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(s.premier === k), onclick: () => { s.premier = k; dessiner(); } }, l)))) : ""));
+      if (s.mode === "score" && !s.nous.length && !s.eux.length) {
+        const champN = k => { const i = el("input", { type: "number", min: "0", max: "30", inputmode: "numeric", class: "champ", value: s[k] != null ? String(s[k]) : "" }); i.addEventListener("input", () => { s[k] = i.value === "" ? null : Math.max(0, +i.value); maj(); }); return i; };
+        const res = el("p", { class: "conv-moi" });
+        const maj = () => { const x = etatSeance(s, false); res.textContent = s.sn == null || s.se == null ? "" : x.vainqueur ? (x.vainqueur === "nous" ? `🏆 ${nous} gagne ${x.ga}-${x.gb}` : `${eux} gagne ${x.gb}-${x.ga}`) : "Il faut un vainqueur : les scores ne peuvent pas être égaux."; };
+        zone.append(el("div", { class: "carte lg" }, el("b", { text: "Score de la séance de tirs au but" }),
+          el("div", { class: "capt-grille" }, el("label", { class: "capt-champ" }, el("span", { text: nous }), champN("sn")), el("label", { class: "capt-champ" }, el("span", { text: eux }), champN("se"))), res));
+        maj();
+      }
+      if (s.mode === "score" && !s.nous.length && !s.eux.length) { /* score seul : rien d'autre */ }
+      else if (e.fini) {
         zone.append(el("div", { class: "carte lg seance-fin " + (e.vainqueur === "nous" ? "gagne" : "perdu") },
           el("b", { text: e.vainqueur === "nous" ? `🏆 ${nous} gagne ${e.ga}-${e.gb} aux tirs au but !` : `${eux} gagne ${e.gb}-${e.ga} aux tirs au but` }),
-          el("span", { class: "muted petit", text: "La séance est terminée. Tu peux l'enregistrer." })));
+          el("span", { class: "muted petit", text: "La séance est terminée. Tu peux l'enregistrer." }),
+          s.gagnant ? bouton("Changer le vainqueur", () => { s.gagnant = undefined; dessiner(); }, "lien") : ""));
       } else {
         const equipe = e.tour, num = (equipe === "nous" ? e.na : e.nb) + 1;
-        const boite = el("div", { class: "carte lg" }, el("b", { text: `Tir n°${num} · ${equipe === "nous" ? nous : eux}${num > 5 ? " (mort subite)" : ""}` }));
+        const boite = el("div", { class: "carte lg" }, el("b", { text: `Tir n°${num} · ${equipe === "nous" ? nous : eux}${num > e.N ? " (mort subite)" : ""}` }));
         if (equipe === "nous") {
           const opts = [["moi", `⭐ Moi (${ETAT.profil.prenom || "moi"})`], ...tireursPossibles(m).map(n => [n, n])];
           boite.append(el("p", { class: "label-mini", text: "Qui tire ?" }),
@@ -8876,9 +8906,11 @@ function editerSeanceTab(m) {
         };
         boite.append(el("div", { class: "seance-boutons" }, bouton("✅ Marqué", () => tirer(true), "mini vert"), bouton("❌ Raté / arrêté", () => tirer(false), "mini rouge")));
         zone.append(boite);
+        if (s.nous.length || s.eux.length) zone.append(el("div", { class: "carte lg" }, el("b", { text: "La séance est finie ? Qui a gagné ?" }),
+          el("div", { class: "puces" }, [["nous", `🏆 ${nous}`], ["eux", eux]].map(([k, l]) => el("button", { class: "chip", type: "button", "aria-pressed": String(s.gagnant === k), onclick: () => { s.gagnant = s.gagnant === k ? undefined : k; dessiner(); } }, l)))));
       }
       if (s.nous.length || s.eux.length) zone.append(el("div", { class: "rangee", style: "justify-content:center" }, bouton("↩︎ Annuler le dernier tir", () => {
-        const e2 = etatSeance(s);
+        const e2 = etatSeance(s, false);
         // le dernier tireur : l'équipe qui a tiré une fois de plus, ou la 2e à tirer si égalité
         const dernier = e2.na > e2.nb ? "nous" : e2.nb > e2.na ? "eux" : (s.premier === "nous" ? "eux" : "nous");
         (dernier === "nous" ? s.nous : s.eux).pop(); dessiner();
@@ -8886,7 +8918,10 @@ function editerSeanceTab(m) {
       zone.append(el("div", { class: "form-actions" },
         m.seance ? bouton("Supprimer la séance", () => confirmer("Supprimer cette séance de tirs au but ?", () => { delete m.seance; synchroTabs(m); noter("Supprimé", `Tirs au but · ${matchLabel(m)}`); sauver(); f.fermer(); toutRafraichir(); rafraichirFeuilles(); }), "lien danger gauche") : "",
         bouton("Enregistrer", () => {
-          if (!s.nous.length && !s.eux.length) { f.fermer(); return; }
+          const scoreSeul = s.mode === "score" && !s.nous.length && !s.eux.length;
+          if (scoreSeul) { if (s.sn == null || s.se == null || +s.sn === +s.se) { toast("Indique le score de la séance (il faut un vainqueur).", 4000); return; } }
+          else if (!s.nous.length && !s.eux.length) { f.fermer(); return; }
+          if (!scoreSeul) { delete s.sn; delete s.se; }
           const existait = !!m.seance;
           m.seance = s; synchroTabs(m);
           const e3 = etatSeance(s);
