@@ -1208,6 +1208,9 @@ h1 { font-size: clamp(1.55rem, 7.2vw, 2.25rem); white-space: nowrap; font-weight
 .conv-msg { margin-top: 6px; }
 .conv-msg details summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; font-weight: 700; }
 .conv-msg p { margin: 4px 0; }
+
+.doublons { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--gold) 65%, transparent) !important; }
+.doublon { display: flex; flex-direction: column; gap: 6px; }
 </style>
 
 <canvas id="fond" aria-hidden="true"></canvas>
@@ -2871,6 +2874,7 @@ function supprimerMediasDe(x) {
 function supprimer(liste, item, label) {
   ETAT[liste] = ETAT[liste].filter(x => x.id !== item.id);
   supprimerMediasDe(item);
+  if (liste === "matchs" && item.convId) ETAT.profil.convIgnorees = { ...(ETAT.profil.convIgnorees || {}), [item.convId]: 1 };
   if (liste === "matchs") {
     // un match supprimé emporte ses buts, passes, penaltys et tirs au but
     ["buts", "passes", "penRates", "tab"].forEach(l => {
@@ -7547,6 +7551,8 @@ function rendreMatchs() {
   v.append(el("div", { class: "filtres segm", role: "tablist", "aria-label": "Matchs" },
     [["avenir", `À venir${avenir.length ? ` (${avenir.length})` : ""}`], ...(direct.length ? [["direct", `🔴 En direct (${direct.length})`]] : []), ["termines", "Terminés"], ["calendrier", "📅 Calendrier"]]
       .map(([k, l]) => el("button", { class: "chip", type: "button", role: "tab", "aria-selected": String(ongletMatchs === k), "aria-pressed": String(ongletMatchs === k), onclick: () => { ongletMatchs = k; rendreMatchs(); } }, l))));
+  const dbl = carteDoublons();
+  if (dbl) v.append(dbl);
   if (direct.length && ongletMatchs !== "direct") v.append(el("button", { class: "carte lg bandeau-direct", type: "button", onclick: () => { ongletMatchs = "direct"; rendreMatchs(); } }, el("b", { text: `🔴 ${direct.length > 1 ? direct.length + " matchs" : "Un match"} en direct` }), el("span", { class: "muted petit", text: direct.map(m => `vs ${m.adv || "?"} ${n0(m.lbp)}-${n0(m.lbc)}`).join(" · ") })));
   if (ongletMatchs === "direct") {
     direct.forEach(m => { v.append(carteMatchAffiche(m)); v.append(panneauDirect(m)); });
@@ -7699,6 +7705,7 @@ function ficheMatchBas(corps, m) {
     el("p", { style: "margin:0", text: [m.stade, m.adresse, m.ville].filter(Boolean).join(" · ") }),
     el("p", { class: "aide", style: "margin:0", text: [LIEUX.find(l => l[0] === m.lieu)?.[1], terrain ? "Terrain : " + terrain : null].filter(Boolean).join(" · ") }),
     liensCarte(m) || ""));
+  corps.append(boutonSupprimerMatch(m));
 }
 
 // ---------- Lieux et stades ----------
@@ -9127,35 +9134,108 @@ function detailsConvocation(x) {
       conv.length ? el("p", {}, el("b", { text: tit.length || rem.length ? "Autres convoqués : " : "Convoqués : " }), conv.map(ligne).join(", ")) : ""));
 }
 
-// Chez le joueur : chaque convocation reçue crée ou met à jour le match à venir
+// Chez le joueur : chaque convocation reçue crée ou met à jour le match à venir.
+// Si un match existe déjà ce jour-là (pas encore relié), on demande au joueur si c'est le même.
+function appliquerConvocation(i, m) {
+  const x = i.match, version = i.modifie || i.cree || 1;
+  if (m && !aVenir(m)) { m.convId = i.id; m.convMaj = version; return; } // déjà joué : on ne touche pas au résultat
+  const nouveau = !m;
+  if (!m) { m = { id: uid(), comp: "champ", club: ETAT.profil.club || (EQ.equipe && EQ.equipe.club) || "" }; ETAT.matchs.push(m); }
+  m.convId = i.id; m.convMaj = version; m.d = x.date; if (x.adv) m.adv = x.adv; m.lieu = x.domicile === false ? "ext" : "dom";
+  ["heure", "rdv", "lieuRdv"].forEach(k => { if (x[k]) m[k] = x[k]; });
+  if (x.lieu) m.stade = x.lieu;
+  const c = Array.isArray(x.convoques) ? x.convoques : [];
+  if (c.length) {
+    const ligne = j => `${j.numero != null ? j.numero + " " : ""}${j.nom}`;
+    m.convoques = c.map(ligne).join("\n");
+    const tit = c.filter(j => j.role === "tit"), rem = c.filter(j => j.role === "rem");
+    if (tit.length || rem.length) { m.titulaires = tit.map(ligne).join("\n"); m.remplacants = rem.map(ligne).join("\n"); }
+    const moi = c.find(j => j.id === EQ.moi) || c.find(j => estMoi(j.nom));
+    m.statut = moi ? (moi.role === "rem" ? "rem" : "tit") : "abs";
+  } else if (!m.statut) m.statut = "tit";
+  noter(nouveau ? "Ajouté" : "Modifié", `Convocation du coach · ${matchLabel(m)}`);
+  sauver(); toutRafraichir();
+}
 function syncConvocations() {
   if (estCoach() || statutJoueur() !== "membre") return;
   const limite = (() => { const d = dateObj(aujourdHui()); d.setDate(d.getDate() - 14); return isoDe(d); })();
-  let change = false;
-  itemsVus(["msg"]).filter(i => i.kind === "match" && i.match && i.match.date && i.match.date >= limite).forEach(i => {
-    const x = i.match, version = i.modifie || i.cree || 1;
-    let m = ETAT.matchs.find(y => y.convId === i.id);
-    if (m && m.convMaj === version) return;
-    if (!m) m = ETAT.matchs.find(y => !y.convId && y.d === x.date && (aVenir(y) || cleClub(y.adv) === cleClub(x.adv)));
-    if (m && !aVenir(m)) { m.convId = i.id; m.convMaj = version; change = true; return; } // déjà joué : on ne touche pas au résultat
-    const nouveau = !m;
-    if (!m) { m = { id: uid(), comp: "champ", club: ETAT.profil.club || (EQ.equipe && EQ.equipe.club) || "" }; ETAT.matchs.push(m); }
-    m.convId = i.id; m.convMaj = version; m.d = x.date; if (x.adv) m.adv = x.adv; m.lieu = x.domicile === false ? "ext" : "dom";
-    ["heure", "rdv", "lieuRdv"].forEach(k => { if (x[k]) m[k] = x[k]; });
-    if (x.lieu) m.stade = x.lieu;
-    const c = Array.isArray(x.convoques) ? x.convoques : [];
-    if (c.length) {
-      const ligne = j => `${j.numero != null ? j.numero + " " : ""}${j.nom}`;
-      m.convoques = c.map(ligne).join("\n");
-      const tit = c.filter(j => j.role === "tit"), rem = c.filter(j => j.role === "rem");
-      if (tit.length || rem.length) { m.titulaires = tit.map(ligne).join("\n"); m.remplacants = rem.map(ligne).join("\n"); }
-      const moi = c.find(j => j.id === EQ.moi) || c.find(j => estMoi(j.nom));
-      m.statut = moi ? (moi.role === "rem" ? "rem" : "tit") : "abs";
-    } else if (!m.statut) m.statut = "tit";
-    noter(nouveau ? "Ajouté" : "Modifié", `Convocation du coach · ${matchLabel(m)}`);
-    change = true;
+  const ignorees = ETAT.profil.convIgnorees || {};
+  itemsVus(["msg"]).filter(i => i.kind === "match" && i.match && i.match.date && i.match.date >= limite && !ignorees[i.id]).forEach(i => {
+    const version = i.modifie || i.cree || 1;
+    const lie = ETAT.matchs.find(y => y.convId === i.id);
+    if (lie) { if (lie.convMaj !== version) appliquerConvocation(i, lie); return; }
+    const existant = ETAT.matchs.find(y => !y.convId && y.d === i.match.date);
+    if (existant) { demanderConvocationDoublon(i, existant, m => appliquerConvocation(i, m)); return; }
+    appliquerConvocation(i, null);
   });
-  if (change) { sauver(); toutRafraichir(); }
+}
+
+// =====================================================================
+//  DOUBLONS DE MATCHS ET SUPPRESSION RAPIDE
+//  - deux matchs le même jour contre le même adversaire → proposer de fusionner
+//  - convocation du coach alors que le match existe déjà → demander au joueur
+//  - bouton « Supprimer ce match » directement dans la fiche
+// =====================================================================
+const advProche = (a, b) => { if (!a || !b) return false; const x = cleClub(a), y = cleClub(b); return x === y || (baseClub(a) && baseClub(a) === baseClub(b)) || x.includes(y) || y.includes(x) || ressemblance(a, b) >= .7; };
+const cleDoublon = (a, b) => [a.id, b.id].sort().join("|");
+function doublonsMatchs() {
+  const ok = new Set(ETAT.profil.doublonsOk || []), out = [];
+  const ms = ETAT.matchs.filter(m => m.d);
+  for (let i = 0; i < ms.length; i++) for (let j = i + 1; j < ms.length; j++) {
+    const a = ms[i], b = ms[j];
+    if (a.d !== b.d || !advProche(a.adv, b.adv) || ok.has(cleDoublon(a, b))) continue;
+    out.push(scoreGarder(a) >= scoreGarder(b) ? [a, b] : [b, a]);
+  }
+  return out;
+}
+// le match à garder : celui qui a un score, des buts, la convocation du coach, le plus d'infos
+function scoreGarder(m) {
+  return (aVenir(m) ? 0 : 100) + ETAT.buts.filter(b => b.matchId === m.id).length * 10 + ETAT.passes.filter(p => p.matchId === m.id).length * 10 + (m.convId ? 5 : 0) + Object.keys(m).length * .1;
+}
+function fusionnerMatchs(garder, enlever) {
+  Object.keys(enlever).forEach(k => { if (k !== "id" && (garder[k] == null || garder[k] === "") && enlever[k] != null && enlever[k] !== "") garder[k] = enlever[k]; });
+  if (garder.comp === "autre" && enlever.comp && enlever.comp !== "autre") garder.comp = enlever.comp;
+  ["buts", "passes", "penRates", "tab"].forEach(l => ETAT[l].forEach(x => { if (x.matchId === enlever.id) x.matchId = garder.id; }));
+  ETAT.matchs = ETAT.matchs.filter(m => m.id !== enlever.id);
+  noter("Modifié", `Doublon fusionné · ${matchLabel(garder)}`);
+  sauver(); toutRafraichir(); rafraichirFeuilles();
+}
+function carteDoublons() {
+  const d = doublonsMatchs();
+  if (!d.length) return "";
+  return el("div", { class: "carte lg doublons" }, el("h3", { text: `⚠️ ${d.length > 1 ? d.length + " doublons possibles" : "Doublon possible"}` }),
+    ...d.map(([a, b]) => el("div", { class: "doublon" },
+      el("p", { style: "margin:0", text: `${joli(a.d)} : 2 matchs contre ${a.adv || b.adv || "le même adversaire"}${a.convId || b.convId ? " (dont la convocation du coach)" : ""}.` }),
+      el("div", { class: "rangee" },
+        bouton("Fusionner en un seul", () => confirmer(`Garder un seul match contre ${a.adv || "l'adversaire"} le ${court(a.d)} ? Les buts, passes et infos des deux sont réunis.`, () => { fusionnerMatchs(a, b); toast("✅ Doublon fusionné"); }), "mini vert"),
+        bouton("Ce sont 2 matchs différents", () => { ETAT.profil.doublonsOk = [...(ETAT.profil.doublonsOk || []), cleDoublon(a, b)]; sauver(); toutRafraichir(); }, "lien")))));
+}
+function boutonSupprimerMatch(m) {
+  return el("div", { class: "rangee", style: "justify-content:center" }, bouton("🗑️ Supprimer ce match", () => {
+    const nb = ETAT.buts.filter(b => b.matchId === m.id).length + ETAT.passes.filter(p => p.matchId === m.id).length;
+    confirmer(`Supprimer le match contre ${m.adv || "l'adversaire"}${m.d ? " du " + court(m.d) : ""} ?${nb ? ` Ses ${nb} buts et passes seront aussi supprimés.` : ""}${m.convId ? " La convocation du coach ne le recréera pas." : ""}`, () => {
+      supprimer("matchs", m, `Match ${matchLabel(m)}`);
+      pile.slice().forEach(x => x.fermer());
+      toast("🗑️ Match supprimé");
+    });
+  }, "lien danger"));
+}
+
+// ---------- Convocation reçue alors que le match existe déjà ----------
+const convDejaDemandees = new Set();
+function demanderConvocationDoublon(item, existant, appliquer) {
+  if (convDejaDemandees.has(item.id) || pile.some(f => f.convId === item.id)) return;
+  convDejaDemandees.add(item.id);
+  const x = item.match;
+  const fe = feuille("📋 Convocation du coach", (corps, f) => {
+    corps.append(
+      el("p", { text: `Ton coach t'a envoyé une convocation pour le ${joli(x.date)} contre ${x.adv || "?"}${x.heure ? " à " + x.heure : ""}.` }),
+      el("p", { class: "aide", text: `Tu as déjà enregistré un match ce jour-là : ${matchLabel(existant)}. Est-ce le même match ?` }),
+      bouton("✅ Oui, c'est le même (je garde un seul match)", () => { f.fermer(); appliquer(existant); toast("Convocation ajoutée à ton match ✅"); }, "mini vert capt-gros"),
+      bouton("➕ Non, c'est un autre match", () => { f.fermer(); appliquer(null); }, "mini gris capt-gros"),
+      bouton("Ignorer cette convocation", () => { ETAT.profil.convIgnorees = { ...(ETAT.profil.convIgnorees || {}), [item.id]: 1 }; sauver(); f.fermer(); }, "lien"));
+  }, { critique: true });
+  if (fe) fe.convId = item.id;
 }
 
 // =====================================================================
